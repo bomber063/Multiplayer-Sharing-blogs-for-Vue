@@ -1,5 +1,5 @@
-## 多人共享博客
-## 首先做测试
+# 多人共享博客
+## 首先查看后端文档做测试
 * 接口约定见[这里](https://xiedaimala.com/tasks/0e61bf37-d479-481b-a43e-8d7dd6069f93/text_tutorials/606cfb19-ca16-4fec-8564-75c1979871d6)
 ### 注册测试
 * 在git bash里面输入
@@ -88,7 +88,7 @@ curl "http://blog-server.hunger-valley.com/auth/logout" -b "connect.sid=s%3AgSkQ
 ```
 * 如果不带上这个cookie是不行的
 ## 安装vue/cli
-* 这里要运行下面代码命令必须要全局安装一个插件`@vue/cli-init`，具体见[这里](https://blog.csdn.net/qq_42429367/article/details/105616392)
+* 这里要运行下面代码命令**必须要全局安装**一个插件`@vue/cli-init`，具体见[这里](https://blog.csdn.net/qq_42429367/article/details/105616392)
 ```sh
 npx vue init webpack blog-client
 ```
@@ -200,3 +200,206 @@ const devWebpackConfig = merge(baseWebpackConfig, {//这里使用老的webpeck�
 * 接下来就在components里面增加我们自己的组件。
 * 多个路由在router目录下面的index.js配置路由信息
 * 后续还会用到Vuex。
+## 查看路由(router)文件夹里面的index.js
+* index.js文件里面有一句代码用到@。
+```js
+import HelloWorld from '@/components/HelloWorld'
+```
+* @是代表src目录的根目录，这里可以通过文件`webpack.base.conf.js`对应的代码可以知道，查看别人的[笔记](https://www.jianshu.com/p/fb1cd40b9826)
+```js
+  resolve: {
+    extensions: ['.js', '.vue', '.json'],
+    alias: {
+      'vue$': 'vue/dist/vue.esm.js',
+      '@': resolve('src'),//这里就代表@是src目录
+    }
+  },
+```
+* 默认会创建一个helloworld这个组件，并且在index.js里面引用
+* 还有vue-router，并且创建了一个new Router。就是说在这个路径下面显示HelloWorld这个组件的信息。
+```js
+import Vue from 'vue'
+import Router from 'vue-router'
+import HelloWorld from '@/components/HelloWorld'
+
+Vue.use(Router)
+
+export default new Router({
+  routes: [
+    {
+      path: '/',
+      name: 'HelloWorld',
+      component: HelloWorld
+    }
+  ]
+})
+```
+* 然后再main.js里面使用了这个Router对象作为Vue的一个属性。
+```js
+import Vue from 'vue'
+import App from './App'
+import router from './router'
+
+Vue.config.productionTip = false
+
+/* eslint-disable no-new */
+new Vue({
+  el: '#app',
+  router,
+  components: { App },
+  template: '<App/>'
+})
+```
+## 模仿HelloWorld新增几个页面
+* 这里面`<style scoped>`的scoped代表这个样式只作用于这个组件，这个组件以外的都作用不到。
+* Login
+```vue
+<template>
+  <div class="hello">
+    登陆页面
+  </div>
+</template>
+
+<script>
+export default {
+  data () {
+    return {
+      msg: 'Welcome to Your Vue.js App'
+    }
+  }
+}
+</script>
+```
+* login的路由
+```js
+    {
+      path: '/login',
+      component: Login
+    }
+```
+* 为了更方便阅读，我们把文件夹components名字修改为pages，然后把vue组件的template，style和script分成三个文件（template.js——template.css——template.vue）。
+* vue文档里面也推荐这种写法——[怎么看待关注点分离？](https://cn.vuejs.org/v2/guide/single-file-components.html#%E6%80%8E%E4%B9%88%E7%9C%8B%E5%BE%85%E5%85%B3%E6%B3%A8%E7%82%B9%E5%88%86%E7%A6%BB%EF%BC%9F)
+* 修改路径和分成三个文件后需要增加后缀，比如template.vue,不然会报错。
+```js
+import Login from '@/pages/Login/template.vue'
+```
+* 不写后缀的报错如下
+```js
+vue.esm.js?efeb:628 [Vue warn]: Failed to mount component: template or render function not defined.
+
+found in
+
+---> <Anonymous>
+       <App> at src/App.vue
+         <Root>
+```
+* 创建的路由
+```js
+import Vue from 'vue'
+import Router from 'vue-router'
+import Create from '@/pages/Create/template.vue'
+import Detail from '@/pages/Detail/template.vue'
+import Edit from '@/pages/Edit/template.vue'
+import Index from '@/pages/Index/template.vue'
+import Login from '@/pages/Login/template.vue'
+import My from '@/pages/My/template.vue'
+import Register from '@/pages/Register/template.vue'
+import User from '@/pages/User/template.vue'
+
+Vue.use(Router)
+
+export default new Router({
+  routes: [
+    {
+      path: '/create',
+      component: Create
+    },
+    {
+      path: '/detail',
+      component: Detail
+    },
+    {
+      path: '/edit',
+      component: Edit
+    },    
+    {
+      path: '/',
+      component: Index
+    },
+    {
+      path: '/login',
+      component: Login
+    },
+    {
+      path: '/my',
+      component: My
+    },    
+    {
+      path: '/register',
+      component: Register
+    },    
+    {
+      path: '/user',
+      component: User
+    }
+  ]
+```
+* 后续通用的组件，也就是被很多地方用到的，就可以放到components文件夹里面。
+### 样式使用技巧之scoped&less
+* 我们如果在style上面不使用scoped，那么该样式应用在**全局**
+```vue
+<style scoped src="./template.css"></style>
+```
+* 如果用scoped了，就是**局部,也就是当前的模块或者组件**
+* 这里测试后改变路由是可以实现的，但是**刷新后可能实现不了，刷新后的样式被组件自己的样式覆盖**
+```vue
+<style src="./template.css"></style>
+```
+* 使用less只需要写上lang即可
+```js
+<style scoped lang="less" src="./template.less"></style>
+```
+* 但是less是需要安装less-loader才可以运行的。运行下面命令就可以安装less-loader啦
+```sh
+npm install less-loader
+```
+### 这里出现一个less的BUG
+* 我直接安装less-loader是最高版本的。
+```js
+    "less-loader": "^6.1.0",
+```
+* 这里执行后会报错,重点的两句报错代码
+```sh
+error  in ./src/pages/Index/template.less
+
+Module build failed: TypeError: loaderContext.getResolve is not a function
+```
+* 经过搜索找到有类似问题的[情况1——less--Module build failed: TypeError: loaderContext.getResolve is not a function](https://blog.csdn.net/shujiaw/article/details/105863069),[情况2——sass-loader的版本过高导致的编译错误，当前最高版本是8.x，需要退回到7.3.1](https://www.cnblogs.com/blucesun/p/11463426.html)
+* 综合测试我发现我的问题也类似，**我卸载了高版本的less-loader，然后安装了低版本的**
+```sh
+npm install less-loader@4.1.0
+```
+* 之后发现还存在报错，大概意思就是还需要安装less模块。
+```sh
+Module build failed: Error: Cannot find module 'less'
+```
+* 那我继续安装less模块,版本是`"less": "^3.11.1"`,
+```sh
+ npm install less
+```
+* 现在运行`npm run dev`终于可以不报错了。可以使用less语法了。
+### 通用的样式可以放到assets里面
+* 比如整个网站的主题色，间距等，这些通用的样式可以放到assets文件夹里面。
+* 我在assets的base.less中创建一个颜色
+```css
+@themeColor:#ff3300;
+```
+* 然后再Index目录的template.less中引入就可以使用啦,**这里要注意@import后面结束必须加上分号**
+```less
+@import '../../assets/base.less';
+// 上面的结束是必须加上分号的
+
+p{
+    color: @themeColor;
+}
+```
