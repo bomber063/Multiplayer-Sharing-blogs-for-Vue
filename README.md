@@ -513,114 +513,123 @@ npm i element-ui -S
 
           window.request=request//把它变成全局对象，这样全局都可以测试
         ```
-      * 我们可以在Chrome调试页面的log终端里面直接输入代码测试，比如输入
-      ```js
-        request('/auth/login','post',{username:'hunger1',
-        password:'123458'}).then(data=>{
-          console.log(data)
-        })
-      ```
-      * 这里会弹出提示密码不正确，并且log里面打出如下代码，这是后端的响应数据。
-      ```js
-        {status: "fail", msg: "密码不正确"}
-      ```
-      * 如果我们输入的密码是正确的，比如
-      ```js
-        request('/auth/login','post',{username:'hunger1',
-        password:'123456'}).then(data=>{
-          console.log(data)
-        })
-      ```
-      * 后端的响应数据就是
-      ```js
-        {status: "ok", msg: "登录成功", data: {…}}
-      ```
-      * 当然如果出错的话还可以用catch直接展示错误信息
-      ```js
-        request('/auth/login','post',{username:'hunger1',
-        password:'123458'}).then(data=>{
-          console.log(data)
-        }).catch(()=>{
+### helpers里面的request.js测试
+#### 登陆测试
+* 我们可以在Chrome调试页面的log终端里面直接输入代码测试，比如输入
+```js
+  request('/auth/login','post',{username:'hunger1',
+  password:'123458'}).then(data=>{
+    console.log(data)
+  })
+```
+* 这里会弹出提示密码不正确，并且log里面打出如下代码，这是后端的响应数据。
+```js
+  {status: "fail", msg: "密码不正确"}
+```
+* 如果我们输入的密码是正确的，比如
+```js
+  request('/auth/login','post',{username:'hunger1',
+  password:'123456'}).then(data=>{
+    console.log(data)
+  })
+```
+* 后端的响应数据就是
+```js
+  {status: "ok", msg: "登录成功", data: {…}}
+```
+* 当然如果出错的话还可以用catch直接展示错误信息
+```js
+  request('/auth/login','post',{username:'hunger1',
+  password:'123458'}).then(data=>{
+    console.log(data)
+  }).catch(()=>{
+    console.log('出错了')
+  })
+```
+* 这样会显示**出错了**三个字，也就是说你能对这个错误再次做一次处理。
+#### 判断用户是否登录测试
+* **判断用户是否登录**
+```js
+  request('/auth','get').then(data=>{
+    console.log(data)
+  }).catch(()=>{
           console.log('出错了')
-        })
-      ```
-      * 这样会显示**出错了**三个字，也就是说你能对这个错误再次做一次处理。
-      * **判断用户是否登录**
-      ```js
-        request('/auth','get').then(data=>{
-          console.log(data)
-        }).catch(()=>{
-                console.log('出错了')
-        })
-      ```
-      * 返回的响应
-      ```js
-        {status: "ok", isLogin: true, data: {…}}
-      ```
-      * 这里我们在**登陆状态测试创建博客**。
-      ```js
-            request('/blog','post',{title:'你好',content:'内容',description:'详情'
-            }).then(data=>{
-              console.log(data)
-            }).catch(()=>{
-                    console.log('出错了')
-            })
-      ```
-      * 然后返回的响应信息
-      ```js
-        {status: "ok", msg: "创建成功", data: {…}}
-      ```
-      * 测试获取**某个用户博客列表**
-      ```js
-        request('/blog','get',{page:1,userId:1,atIndex:true
-        }).then(data=>{
-          console.log(data)
-        }).catch(()=>{
-                console.log('出错了')
+  })
+```
+* 返回的响应
+```js
+  {status: "ok", isLogin: true, data: {…}}
+```
+#### 登陆状态测试创建博客测试
+* 这里我们在**登陆状态测试创建博客**。
+```js
+      request('/blog','post',{title:'你好',content:'内容',description:'详情'
+      }).then(data=>{
+        console.log(data)
+      }).catch(()=>{
+              console.log('出错了')
       })
-      ```
-      * 然后返回的响应信息
-      ```js
-        {status: "ok", msg: "获取成功", total: 0, totalPage: 0, page: 1, …}
-      ```
-      * 获取**所有的博客列表**，这里就不用输入第三个参数.
-      ```js
-        request('/blog','get').then(data=>{
-          console.log(data)
-        }).catch(()=>{
-                console.log('出错了')
-        })
-      ```
-      * 返回的响应信息
-      ```js
-        {status: "ok", msg: "获取成功", total: 2203, totalPage: 221, page: 1, …}
-      ```
-      * 获取**某个用户的博客详情**
-      ```js
-        request('/blog/2','get').then(data=>{
-          console.log(data)
-        }).catch(()=>{
-                console.log('出错了')
-        })
-      ```
-      * 成功后返回响应
-      ```sh
-      {status: "ok", msg: "获取成功", data: {…}}
-      ```
-      * 如果失败就会返回
-      ```sh
-        {status: "fail", msg: "博客不存在"}
-      ```
-      * 删除**某个用户的某个博客**
-      ```js
-        request('/blog/1','delete',).then(data=>{
-          console.log(data)
-        }).catch(()=>{
-                console.log('出错了')
-        })
-      ```
-      * 返回信息
-      ```js
-        {status: "fail", msg: "博客不存在或你没有权限"}
-      ```
-      * **修改某个用户的某个博客**，目前暂时测试失败。
+```
+* 然后返回的响应信息
+```js
+  {status: "ok", msg: "创建成功", data: {…}}
+```
+#### 获取某个用户博客列表测试
+* 测试获取**某个用户博客列表**
+```js
+  request('/blog','get',{page:1,userId:1,atIndex:true
+  }).then(data=>{
+    console.log(data)
+  }).catch(()=>{
+          console.log('出错了')
+})
+```
+* 然后返回的响应信息
+```js
+  {status: "ok", msg: "获取成功", total: 0, totalPage: 0, page: 1, …}
+```
+#### 获取所有的博客列表列表测试
+* 获取**所有的博客列表**，这里就不用输入第三个参数.
+```js
+  request('/blog','get').then(data=>{
+    console.log(data)
+  }).catch(()=>{
+          console.log('出错了')
+  })
+```
+* 返回的响应信息
+```js
+  {status: "ok", msg: "获取成功", total: 2203, totalPage: 221, page: 1, …}
+```
+#### 获取某个用户的博客详情测试
+* 获取**某个用户的博客详情**
+```js
+  request('/blog/2','get').then(data=>{
+    console.log(data)
+  }).catch(()=>{
+          console.log('出错了')
+  })
+```
+* 成功后返回响应
+```sh
+{status: "ok", msg: "获取成功", data: {…}}
+```
+* 如果失败就会返回
+```sh
+  {status: "fail", msg: "博客不存在"}
+```
+#### 删除某个用户的某个博客测试
+* 删除**某个用户的某个博客**
+```js
+  request('/blog/1','delete',).then(data=>{
+    console.log(data)
+  }).catch(()=>{
+          console.log('出错了')
+  })
+```
+* 返回信息
+```js
+  {status: "fail", msg: "博客不存在或你没有权限"}
+```
+#### 修改某个用户的某个博客测试
+* **修改某个用户的某个博客**，目前暂时测试失败。
