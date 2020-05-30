@@ -1,5 +1,7 @@
 import request from '@/helpers/request.js'//因为在request.js里面导出的是default，那么引入的时候变量名字可以自己定义，这里定义为request。
+import auth from '@/api/auth.js'
 
+window.auth=auth
 window.request=request//把它变成全局对象，这样全局都可以测试
 
 export default {

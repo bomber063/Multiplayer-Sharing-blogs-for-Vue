@@ -633,3 +633,48 @@ npm i element-ui -S
 ```
 #### 修改某个用户的某个博客测试
 * **修改某个用户的某个博客**，目前暂时测试失败。
+## api接口封装-auth
+* 在api文档里面新建auth.js，这里创建与**用户有关的api封装**。这样封装后，我们的一些操作会更简单。
+```js
+import request from '@/helpers/request'
+
+const URL = {//这里面分别保存注册，登陆，登出，判断用户是否登录的URL地址
+  REGISTER: '/auth/register',
+  LOGIN: '/auth/login',
+  LOGOUT: '/auth/logout',
+  GET_INFO: '/auth'
+}
+
+export default {//这里结合了/helpers/request里面的request请求有三个参数，还有后端的用户需要传的参数对比封装的函数
+  register({username, password}) {
+    return request(URL.REGISTER, 'POST', { username, password })
+  },
+
+  login({username, password}) {
+    return request(URL.LOGIN, 'POST', { username, password })
+  },
+
+  logout() {
+    return request(URL.LOGOUT)
+  },
+
+  getInfo() {
+    return request(URL.GET_INFO)
+  }
+}
+```
+* 这时候我们在index主页里面引入这个封装的auth
+```js
+import auth from '@/api/auth.js'
+
+window.auth=auth
+```
+* 以前复杂的登陆代码就可以简化为下面的代码，其他的类似简化了。
+```js
+auth.login({username:'hunger1',
+  password:'123456'})
+```
+* 会返回登陆成功
+```js
+{status: "ok", msg: "登录成功", data: {…}}
+```
