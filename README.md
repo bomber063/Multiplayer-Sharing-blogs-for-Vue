@@ -403,3 +403,224 @@ p{
     color: @themeColor;
 }
 ```
+## ElementUI组件使用及封装
+* 通过官[网的快速上手](https://element.eleme.cn/#/zh-CN/component/quickstart)就了解如何使用啦，为了简单起见我这里就完整引入了。
+* 我这里就通过npm安装吧
+```sh
+npm i element-ui -S
+```
+* 我安装的版本是element-ui@2.13.2
+* 我使用了两个button组件
+```html
+        <el-button @click="onClick1">默认按钮</el-button>
+        <el-button @click="onClick2">alert</el-button>
+```
+* 然后对应的方法
+```js
+    methods:{
+      onClick1(){
+        this.$message.error('错了哦，这是一条错误消息');
+      },
+      onClick2(){
+        this.$alert('这是一段内容', '标题名称', {
+          confirmButtonText: '确定',
+          callback: action => {
+            this.$message.success('点了确定');
+          }
+        });
+      }
+    }
+```
+* 因为element-UI的样式跟我们需求的样式不同，我们可以通过自己针对某个class或者ID写样式来覆盖整个UI原本的样式。
+### 数据请求接口封装
+* 在src里面增加两个文件夹，一个是helpers，一个是api。
+  * helpers
+    * 通用的函数或者底层的方法，比如把一个事件转换为一个友好的事件，刚刚，5分钟前，半小时前这样，可能很多地方需要用到.
+    * 还可以封装一个底层的请求AJAX。封装好了，提供一个函数名字，其他地方想去发请求的时候就不需要单独写AJAX了。直接调用这里的封装的方法即可。
+    * 这里面用到[axios](https://www.npmjs.com/package/axios)，它类似于jQuery的AJAX。不过这个不管再浏览器端还是node端都可以使用。**它用于发送请求获取数据**。
+    * [axios中文文档](http://www.axios-js.com/zh-cn/docs/)
+    * 配置具体可以看[请求配置](http://www.axios-js.com/zh-cn/docs/#%E8%AF%B7%E6%B1%82%E9%85%8D%E7%BD%AE)
+    * 因为前后端分离，前端（我们的代码部署到github上面的域名）和后端（http://blog-server.hunger-valley.com）的域名不是一个，那么就发请求的时候就存在跨域的问题，这里设置下面代码，就可以通过不同域名发送凭证，也就是cookie，当然这里服务端可以设置允许跨域或者允许某个域名跨域。**但是这里有一个问题就是接口的跨域是不会带上cookie,只有相同域名才会带上cookie，设置了withCredentials就代表即使是跨域请求也需要带上cookie**.
+      ```js
+        axios.defaults.withCredentials = true// `withCredentials` 表示跨域请求时是否需要使用凭证
+      ```
+    * 首先安装axios依赖
+    ```sh
+      npm install axios
+    ```
+    * axios的部分参数，这里get请求可以有**查询参数**，具体见[这里案例](http://www.axios-js.com/zh-cn/docs/#%E6%A1%88%E4%BE%8B)
+        ```js
+            // 发送 POST 请求
+        axios({
+          method: 'post',
+          url: '/user/12345',
+          data: {
+            firstName: 'Fred',
+            lastName: 'Flintstone'
+          }
+        });
+         // `method` 是创建请求时使用的方法
+         // `url` 是用于请求的服务器 URL
+         // `data` 是作为请求主体被发送的数据
+         // `params` 是即将与请求一起发送的 URL 参数
+        ```
+      * 这里封装的方法的好处是,我们这里封装的好处是万一status的状态不是ok,是别的字段（比如fail），那么就会有相应的响应,比如一个提示。另外还有跨域问题的凭证cookie设置等。
+      ```js
+            import axios from 'axios'
+      import { Message } from 'element-ui'//这里再次引入一次element是因为前面的引入是给Vue实例引入，这里没有Vue。所以用不了，还需要再次引入。
+
+      axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'//这个是配置请求头里面的post请求默认的content-type是application/x-www-form-urlencoded
+      // `headers` 是即将被发送的自定义请求头
+      axios.defaults.baseURL = 'http://blog-server.hunger-valley.com'//这里的配置是请求默认的URL是http://blog-server.hunger-valley.com
+      axios.defaults.withCredentials = true// `withCredentials` 表示跨域请求时是否需要使用凭证
+
+      export default function request(url, type = 'GET', data = {}) {
+          return new Promise((resolve, reject) => {
+            let option = {
+              url,// `url` 是用于请求的服务器 URL
+              method: type// `method` 是创建请求时使用的方法
+            }
+            if(type.toLowerCase() === 'get') {
+              option.params = data// `data` 是作为请求主体被发送的数据，`params` 是即将与请求一起发送的 URL 查询参数
+              //如果是get请求第三个参数data就是查询参数
+            }else {
+              option.data = data//如果不是get请求，第三个参数就是请求主题被发送的数据。
+            }
+            axios(option).then(res => {
+              console.log(res.data)
+              if(res.data.status === 'ok') {//这里的OK是跟后端的约定，后端返回数据里面成功的会有个status:OK 
+                resolve(res.data)//就可以得到数据data,并且resolve出去可以给别人.then使用
+              }else{//这里的错误是跟后端约定的错误
+                Message.error(res.data.msg)//这里的Message.error是elementUI的Message,然后后面的msg就是报错的时候后端会返回这个字段。说明错误的原因
+                reject(res.data)//reject出去是可以给别人.then使用
+              }
+            }).catch(err => {//这里的是请求错误，比如网络有问题的时候出现catch
+              Message.error('网络异常')
+              reject({ msg: '网络异常' })//把错误对象返回给别人可以.then
+            })
+          })
+        }
+
+           // `method` 是创建请求时使用的方法
+         // `url` 是用于请求的服务器 URL
+         // `data` 是作为请求主体被发送的数据
+        // `params` 是即将与请求一起发送的 URL 参数
+      ```
+      * 完成之后我们就可以通过别的地方来测试这个封装的请求方法，比如在首页index上面。
+      * 因为在request.js里面导出的是default，那么引入的时候变量名字可以自己定义，这里定义为request。
+        ```js
+          import request from '@/helpers/request.js'
+
+          window.request=request//把它变成全局对象，这样全局都可以测试
+        ```
+      * 我们可以在Chrome调试页面的log终端里面直接输入代码测试，比如输入
+      ```js
+        request('/auth/login','post',{username:'hunger1',
+        password:'123458'}).then(data=>{
+          console.log(data)
+        })
+      ```
+      * 这里会弹出提示密码不正确，并且log里面打出如下代码，这是后端的响应数据。
+      ```js
+        {status: "fail", msg: "密码不正确"}
+      ```
+      * 如果我们输入的密码是正确的，比如
+      ```js
+        request('/auth/login','post',{username:'hunger1',
+        password:'123456'}).then(data=>{
+          console.log(data)
+        })
+      ```
+      * 后端的响应数据就是
+      ```js
+        {status: "ok", msg: "登录成功", data: {…}}
+      ```
+      * 当然如果出错的话还可以用catch直接展示错误信息
+      ```js
+        request('/auth/login','post',{username:'hunger1',
+        password:'123458'}).then(data=>{
+          console.log(data)
+        }).catch(()=>{
+          console.log('出错了')
+        })
+      ```
+      * 这样会显示**出错了**三个字，也就是说你能对这个错误再次做一次处理。
+      * **判断用户是否登录**
+      ```js
+        request('/auth','get').then(data=>{
+          console.log(data)
+        }).catch(()=>{
+                console.log('出错了')
+        })
+      ```
+      * 返回的响应
+      ```js
+        {status: "ok", isLogin: true, data: {…}}
+      ```
+      * 这里我们在**登陆状态测试创建博客**。
+      ```js
+            request('/blog','post',{title:'你好',content:'内容',description:'详情'
+            }).then(data=>{
+              console.log(data)
+            }).catch(()=>{
+                    console.log('出错了')
+            })
+      ```
+      * 然后返回的响应信息
+      ```js
+        {status: "ok", msg: "创建成功", data: {…}}
+      ```
+      * 测试获取**某个用户博客列表**
+      ```js
+        request('/blog','get',{page:1,userId:1,atIndex:true
+        }).then(data=>{
+          console.log(data)
+        }).catch(()=>{
+                console.log('出错了')
+      })
+      ```
+      * 然后返回的响应信息
+      ```js
+        {status: "ok", msg: "获取成功", total: 0, totalPage: 0, page: 1, …}
+      ```
+      * 获取**所有的博客列表**，这里就不用输入第三个参数.
+      ```js
+        request('/blog','get').then(data=>{
+          console.log(data)
+        }).catch(()=>{
+                console.log('出错了')
+        })
+      ```
+      * 返回的响应信息
+      ```js
+        {status: "ok", msg: "获取成功", total: 2203, totalPage: 221, page: 1, …}
+      ```
+      * 获取**某个用户的博客详情**
+      ```js
+        request('/blog/2','get').then(data=>{
+          console.log(data)
+        }).catch(()=>{
+                console.log('出错了')
+        })
+      ```
+      * 成功后返回响应
+      ```sh
+      {status: "ok", msg: "获取成功", data: {…}}
+      ```
+      * 如果失败就会返回
+      ```sh
+        {status: "fail", msg: "博客不存在"}
+      ```
+      * 删除**某个用户的某个博客**
+      ```js
+        request('/blog/1','delete',).then(data=>{
+          console.log(data)
+        }).catch(()=>{
+                console.log('出错了')
+        })
+      ```
+      * 返回信息
+      ```js
+        {status: "fail", msg: "博客不存在或你没有权限"}
+      ```
+      * **修改某个用户的某个博客**，目前暂时测试失败。
