@@ -1,4 +1,6 @@
 # 多人共享博客
+## 后端的接口文档看这里
+* 本笔记只负责前端部分，[后端接口文档看这里](https://xiedaimala.com/tasks/0e61bf37-d479-481b-a43e-8d7dd6069f93/text_tutorials/606cfb19-ca16-4fec-8564-75c1979871d6)
 ## 首先查看后端文档做测试
 * 接口约定见[这里](https://xiedaimala.com/tasks/0e61bf37-d479-481b-a43e-8d7dd6069f93/text_tutorials/606cfb19-ca16-4fec-8564-75c1979871d6)
 ### 注册测试
@@ -875,4 +877,193 @@ total: 2
 totalPage: 1
 __proto__: Object
 ```
-* 现在我们基础的架构都有了，底层接口，UI组件等。
+* 现在我们基础的架构，底层接口，UI组件等都有了。
+## 项目结构、组件样式
+* 主要app.vue里面有一个
+```html
+    <router-view/>
+```
+* 他是vue-router的一个模块渲染。也就是在router里面的index.js里面根据不同路径渲染不同页面
+```js
+export default new Router({
+  routes: [
+    {
+      path: '/create',
+      component: Create
+    },
+    {
+      path: '/detail',
+      component: Detail
+    },
+    {
+      path: '/edit',
+      component: Edit
+    },    
+    {
+      path: '/',
+      component: Index
+    },
+    {
+      path: '/login',
+      component: Login
+    },
+    {
+      path: '/my',
+      component: My
+    },    
+    {
+      path: '/register',
+      component: Register
+    },    
+    {
+      path: '/user',
+      component: User
+    }
+  ]
+})
+```
+* 公用的页面属性我们可以卸载app.vue里面，为了避免重复写。
+* 另外我在组件上面写了id，它会自动的复用到组件里面去,比如我在Header.vue组件里面的代码，这里并没有id。
+```js
+<template>
+  <header>
+      <h1>Let's share</h1>
+      <p>精品博客汇聚</p>
+      <div class="btns">
+        <el-button>立即登录</el-button>
+        <el-button>注册账号</el-button>
+      </div>
+  </header>
+</template>
+```
+* 在APP.vue中在Header组件上使用id。
+```js
+<template>
+  <div id="app">
+    <Header id="header"></Header>
+    <main id="main">
+      <router-view/>   
+    </main>
+    <Footer id="footer"></Footer>
+  </div>
+</template>
+
+<script>
+import Header from '@/components/header.vue'
+import Footer from '@/components/footer.vue'
+
+export default {
+  name: 'App',
+  components:{
+    Header,
+    Footer
+  }
+}
+</script>
+```
+* 打开Chrome的开发者工具可以看到元素里面**组件Header上面的id自动的复用到了header标签上面去了**。
+### 下面的样式我们用grid做布局
+* grid布局参考  
+  1. MDN文档关于[grid](https://developer.mozilla.org/zh-CN/docs/Web/CSS/grid)
+  2. 阮一峰关于[CSS Grid 网格布局教程](http://www.ruanyifeng.com/blog/2019/03/grid-layout-tutorial.html)
+  3. [CSS 网格布局学习指南](https://jirengu.github.io/css-you-should-know/zh-cn/a-complete-guide-css-grid-layout.html)
+* 这里的App.vue的grid布局代码就是
+```less
+#app {
+  display: grid;
+  grid-template-columns: 12% auto 12%;//这里的auto是除了两边12%的宽度，中间全部撑开
+  grid-template-rows: auto 1fr auto;//这里的auto是由内容撑开，而1fr是尽可能的占满剩下的高度，也就是尽可能撑开
+  grid-template-areas: "header header header"
+                       ".      main  ."
+                       "footer footer footer";
+
+  #header {
+    grid-area: header;
+    padding-left: 12%;
+    padding-right: 12%;
+  }
+
+  #main {
+    grid-area: main;
+  }
+
+  #footer {
+    grid-area: footer;
+    padding-left: 12%;
+    padding-right: 12%;
+  }
+
+}
+
+@media (max-width: 768px) {
+  #app {
+    grid-template-columns: 10px auto 10px;
+
+    #header, #footer {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+
+}
+```
+* 然后通用的样式我们继续放到assets里面，新建一个common.less，而之前的base.less都是一些基础公用的变量。
+```less
+@import "./base.less";
+
+body {
+    font: 14px/1.6 Arial,"Microsoft YaHei","黑体","宋体",sans-serif;
+    color: #333;
+    margin: 0;
+}
+  
+html, body, #app {
+height: 100%;
+}
+
+.el-button {
+color: @themeColor;
+border: 1px solid @themeLighterColor;
+background: #fff;
+border-radius: 4px;  
+}
+```
+* 同时我修改了Header.vue和Footer.vue组件的样式。
+* 注意这里**两个根元素header必须要用v-if,v-else-if不然会报错，如果不用两个根元素，用两个template就可以使用两个v-if**。
+```html
+<template>
+  <!-- <header v-if="true">
+      <h1>Let's share</h1>
+      <p>精品博客汇聚</p>
+      <div class="btns">
+        <el-button>立即登录</el-button>
+        <el-button>注册账号</el-button>
+      </div>
+  </header>
+    <header v-else-if="false">
+      两个根元素header必须要用v-if,v-else-if不然会报错
+      <h1>Let's share</h1>
+      <i class="edit el-icon-edit"></i>
+      <img class="avatar" src="http://cn.gravatar.com/avatar/1?s=128&d=identicon" alt="">
+  </header>-->
+<!-- 如果不用两个根元素，用两个template就可以使用两个v-if -->
+  <header>
+    <template v-if="!isLogin">
+      <h1>Let's share</h1>
+      <p>精品博客汇聚</p>
+      <div class="btns">
+        <el-button>立即登录</el-button>
+        <el-button>注册账号</el-button>
+      </div>
+    </template>
+    <template v-if="isLogin">
+      <!-- 两个根元素header必须要用v-if,v-else-if不然会报错 -->
+      <h1>Let's share</h1>
+      <i class="edit el-icon-edit"></i>
+      <img class="avatar" src="http://cn.gravatar.com/avatar/1?s=128&d=identicon" alt />
+    </template>
+  </header>
+</template>
+```
+
+
