@@ -632,8 +632,26 @@ npm i element-ui -S
   {status: "fail", msg: "博客不存在或你没有权限"}
 ```
 #### 修改某个用户的某个博客测试
-* **修改某个用户的某个博客**，目前暂时测试失败。
-## api接口封装-auth
+* **修改某个用户的某个博客**,这里必须要四个参数都有才可以，不然会报错。
+```js
+        request('/blog/2','PATCH',{
+                    title:'修改后的标题',
+                    content:'修改后的内容',
+                     description:'详情',
+                     atIndex:true
+}).then(data=>{
+          console.log(data)
+        }).catch(()=>{
+                console.log('出错了')
+        })
+```
+* 失败返回
+```js
+{status: "fail", msg: "登录后才能操作"}
+// 或者
+{status: "fail", msg: "博客不存在或你没有权限"}
+```
+### api接口封装-auth
 * 在api文档里面新建auth.js，这里创建与**用户有关的api封装**。这样封装后，我们的一些操作会更简单。
 ```js
 import request from '@/helpers/request'
@@ -678,3 +696,183 @@ auth.login({username:'hunger1',
 ```js
 {status: "ok", msg: "登录成功", data: {…}}
 ```
+### api 接口封装-blog
+* 我们在index目录下面增加引入封装的api
+```js
+import request from '@/helpers/request'
+
+const URL = {//这里跟后端的接口是一样的
+  GET_LIST: '/blog',//获取博客列表
+  GET_DETAIL: '/blog/:blogId',// 获取id 为 blogId 的博客详情
+  CREATE: '/blog',// 创建博客
+  UPDATE: '/blog/:blogId',//修改博客 id 为:blogId 的博客
+  DELETE: '/blog/:blogId'//删除博客 id 为:blogId 的博客
+}
+
+export default {//这里结合了/helpers/request里面的request请求有三个参数，还有后端的用户需要传的参数对比封装的函数
+  getBlogs({ page=1, userId, atIndex } = { page: 1 }) {//这里是解构赋值，右边的对象是如果什么参数都不传入，就默认有一个page是1。左边的对象是如果传入了第二个或者第三个参数，没有第一个参数，那么第一个参数也是1.
+    return request(URL.GET_LIST, 'GET', { page, userId, atIndex })
+  },
+
+  getIndexBlogs({ page=1 } = { page: 1}) {//获取首页的博客列表,这是相对于后端新增加的，其实就是上面复杂的获取博客列表的改版而已。
+    return this.getBlogs({ page, atIndex: true })
+  },
+
+  getBlogsByUserId(userId, { page=1, atIndex } = { page: 1}) {//获取某个用户的博客列表，也是第一种函数换一种写法。
+    return this.getBlogs({ userId, page, atIndex })
+  },
+
+  getDetail({ blogId }) {//获取某个ID用户的博客详情，把字符串:blogId换成真实的 blogId，这时候URL就是一个完整的URL
+    return request(URL.GET_DETAIL.replace(':blogId', blogId))
+  },
+
+  updateBlog({ blogId }, { title, content, description, atIndex }) {//修改博客 id 为:blogId 的博客,也是通过替换:blogId
+    return request(URL.UPDATE.replace(':blogId', blogId), 'PATCH', { title, content, description, atIndex })
+  },
+
+  deleteBlog({ blogId }) {//除博客 id 为:blogId 的博客，也是通过替换:blogId
+    return request(URL.DELETE.replace(':blogId', blogId), 'DELETE')
+  },
+
+  createBlog({ title = '', content = '', description = '', atIndex = false} = { title: '', content: '', description: '', atIndex: false}) {//创建博客，这里相对于后端接口多了一个atIndex，也就是是否设置在首页。默认是不展示在首页。
+    return request(URL.CREATE, 'POST', { title, content, description, atIndex })
+  }
+
+}
+```
+* 比如修改某个用户的某个博客可以简化为
+```js
+blog.updateBlog({blogId:'1'}, {title:'标题',content:'内容',description:'详情',atIndex: true }) 
+```
+* 比如获取博客列表简化为
+```js
+blog.getBlogs({ page:6,userId:4,atIndex:true})
+//也可以不用参数blog.getBlogs()
+```
+#### 完整测试下blog
+* 注册用户
+```js
+auth.register({username:'bomberhaha', password:123456})
+```
+* 返回
+```js
+{status: "ok", msg: "创建成功", data: {…}}
+data: {id: 2053, avatar: "//blog-server.hunger-valley.com/avatar/14.jpg", username: "bomberhaha", updatedAt: "2020-05-31T03:16:42.615Z", createdAt: "2020-05-31T03:16:42.615Z"}
+msg: "创建成功"
+status: "ok"
+__proto__: Object
+```
+* 查看用户是否登录
+```js
+auth.getInfo()
+```
+* 返回
+```js
+{status: "ok", isLogin: true, data: {…}}
+data: {id: 2053, avatar: "//blog-server.hunger-valley.com/avatar/14.jpg", username: "bomberhaha", updatedAt: "2020-05-31T03:16:42.615Z", createdAt: "2020-05-31T03:16:42.615Z"}
+isLogin: true
+status: "ok"
+__proto__: Object
+```
+* 创建博客
+```js
+blog.createBlog({title:'blog from bomberhaha'})
+//一个博客1一个博客2，博客2设置在首页出现
+blog.createBlog({title:'blog2 from bomberhaha for atIndex',atIndex:true})
+```
+* 返回
+```js
+//博客1
+{status: "ok", msg: "创建成功", data: {…}}
+data:
+atIndex: false
+content: ""
+createdAt: "2020-05-31T03:18:35.366Z"
+description: ""
+id: 3880
+title: "blog from bomberhaha"
+updatedAt: "2020-05-31T03:18:35.366Z"
+user: {id: 2053, username: "bomberhaha", avatar: "//blog-server.hunger-valley.com/avatar/14.jpg", createdAt: "2020-05-31T03:16:42.615Z", updatedAt: "2020-05-31T03:16:42.615Z"}
+userId: 2053
+__proto__: Object
+msg: "创建成功"
+status: "ok"
+__proto__: Object
+//博客2
+{status: "ok", msg: "创建成功", data: {…}}
+data:
+atIndex: true
+content: ""
+createdAt: "2020-05-31T03:19:31.211Z"
+description: ""
+id: 3881
+title: "blog2 from bomberhaha for atIndex"
+updatedAt: "2020-05-31T03:19:31.211Z"
+user:
+avatar: "//blog-server.hunger-valley.com/avatar/14.jpg"
+createdAt: "2020-05-31T03:16:42.615Z"
+id: 2053
+updatedAt: "2020-05-31T03:16:42.615Z"
+username: "bomberhaha"
+__proto__: Object
+userId: 2053
+__proto__: Object
+msg: "创建成功"
+status: "ok"
+__proto__: Object
+```
+* 再次获取博客列表发现增加了刚创建的两篇博客
+```js
+blog.getBlogs()
+```
+* 返回
+```js
+{status: "ok", msg: "获取成功", total: 2206, totalPage: 221, page: 1, …}
+data: Array(10)
+0:
+atIndex: true
+createdAt: "2020-05-31T03:19:31.211Z"
+description: ""
+id: 3881
+title: "blog2 from bomberhaha for atIndex"
+updatedAt: "2020-05-31T03:19:31.211Z"
+user: {id: 2053, username: "bomberhaha", avatar: "//blog-server.hunger-valley.com/avatar/14.jpg", createdAt: "2020-05-31T03:16:42.615Z", updatedAt: "2020-05-31T03:16:42.615Z"}
+__proto__: Object
+1: {id: 3880, title: "blog from bomberhaha", description: "", atIndex: false, createdAt: "2020-05-31T03:18:35.366Z", …}
+2: {id: 3879, title: "", description: "", atIndex: false, createdAt: "2020-05-31T03:10:25.865Z", …}
+3: {id: 3878, title: "你好", description: "详情", atIndex: false, createdAt: "2020-05-30T11:37:10.644Z", …}
+4: {id: 3877, title: "文章测试", description: "内容测试", atIndex: true, createdAt: "2020-05-30T05:24:34.016Z", …}
+5: {id: 3876, title: "SK摇大", description: "功能有点少", atIndex: true, createdAt: "2020-05-29T12:27:50.551Z", …}
+6: {id: 3875, title: "动物", description: "", atIndex: false, createdAt: "2020-05-28T16:44:30.479Z", …}
+7: {id: 3874, title: "哈哈哈哈", description: "测试", atIndex: false, createdAt: "2020-05-28T09:43:08.239Z", …}
+8: {id: 3869, title: "ccc", description: "ccc", atIndex: false, createdAt: "2020-05-27T02:51:45.805Z", …}
+9: {id: 3868, title: "ggg", description: "ggg", atIndex: true, createdAt: "2020-05-26T08:40:46.836Z", …}
+length: 10
+__proto__: Array(0)
+msg: "获取成功"
+page: 1
+status: "ok"
+total: 2206
+totalPage: 221
+__proto__: Object
+```
+* 获取某个用户的博客列表
+```js
+blog.getBlogsByUserId(2053)
+```
+* 返回可以新创建的两篇博客
+```js
+{status: "ok", msg: "获取成功", total: 2, totalPage: 1, page: 1, …}
+data: Array(2)
+0: {id: 3881, title: "blog2 from bomberhaha for atIndex", description: "", atIndex: true, createdAt: "2020-05-31T03:19:31.211Z", …}
+1: {id: 3880, title: "blog from bomberhaha", description: "", atIndex: false, createdAt: "2020-05-31T03:18:35.366Z", …}
+length: 2
+__proto__: Array(0)
+msg: "获取成功"
+page: 1
+status: "ok"
+total: 2
+totalPage: 1
+__proto__: Object
+```
+* 现在我们基础的架构都有了，底层接口，UI组件等。
