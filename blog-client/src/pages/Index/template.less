@@ -1,6 +1,60 @@
-@import '../../assets/base.less';
-// 上面的结束是必须加上分号的
+// @import '../../assets/base.less';
+// // 上面的结束是必须加上分号的
 
-p{
-    color: @themeColor;
+// p{
+//     color: @themeColor;
+// }
+
+@import "../../assets/base.less";
+
+#index {
+
+  .item {
+    display: grid;
+    grid: auto auto / 80px 1fr;//前面两个auto代表两行，并且内容自动撑开。如果是1fr是撑开剩余空间。所以后面的80px 1fr就是两列，第一列是80px，第二列是占用剩下的空间。
+    margin: 20px 0;
+
+    .avatar {
+      grid-column: 1;//从第一根先开始，如果不写第二个，就是默认跨一行，根1 / 2的作用一样,或者1/span 1一样。
+      //但是因为用了less语法解析的时候可能会把1/2单做0.5处理，所以可以不用这么写。有多种写法可以实现某种效果。
+      grid-row: 1 / span 2;//这里也可以写成1/3，但是有时候是有些许不同，因为要看第三行线的位置会不会受padding等影响。
+      justify-self: center;
+      margin-left: 0;
+      text-align: center;
+
+      img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+      }
+
+      figcaption {
+        font-size: 12px;
+        color: @textLighterColor;
+      }
+    }
+
+    h3 {
+      grid-column: 2;//相当于2/3
+      grid-row: 1;//相当于1/2
+
+      &>span {
+        color: @textLighterColor;
+        font-size: 12px;
+        font-weight: normal;
+      }
+    }
+
+    p {
+      grid-column: 2;
+      grid-row: 2;
+      margin-top: 0;
+    }
+
+    
+  }
+
+
+
+
 }

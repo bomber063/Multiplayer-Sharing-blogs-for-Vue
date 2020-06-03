@@ -36,7 +36,7 @@
     export default{
       data(){
         return {
-          isLogin:false
+          isLogin:true
           }
       }
     }
@@ -78,6 +78,7 @@ header.login {
   background: @bgColor;
 
   h1 {
+    color: #fff;
     margin: 0;
     padding: 0;
     font-size: 40px;

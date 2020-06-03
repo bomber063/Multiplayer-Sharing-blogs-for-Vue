@@ -1,0 +1,73 @@
+@import "../../assets/base.less";
+
+#my,#user {
+ 
+  .user-info {
+    display: grid;
+    grid: auto auto / 80px 1fr;//两行auto auto 两列80px afr
+    
+    margin-top: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ebebeb;
+
+    .avatar {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+    }
+
+    h3 {
+      grid-column: 2;
+      grid-row: 1;
+      margin-top: 10px;
+    }
+  }
+
+  .item {
+    display: grid;
+    grid: auto  auto auto / 80px 1fr;//三行auto auto auto两列 80px 1fr
+    margin: 20px 0;
+
+    .date {
+      grid-column: 1;//1列
+      grid-row: 1 / span 3;//1开始横跨3行
+      justify-self: center;
+      text-align: center;
+
+      span {
+        display: block;
+        color: @textLighterColor;
+      }
+
+      .day {
+        font-size: 40px;
+      }
+    }
+
+    h3 {
+      grid-column: 2;//第2开始占一行
+      grid-row: 1;//第1列开始占一列
+    }
+
+    p {
+      grid-column: 2;//第2开始占一列
+      grid-row: 2;//第2开始占一行
+      margin-top: 0;
+    }
+
+    .actions {
+      grid-column: 2;//第2开始占一列
+      grid-row: 3;//第3开始占一行
+      font-size: 12px;
+
+      a {
+        color: @themeLighterColor;
+      }
+      
+    }
+
+  }
+
+}

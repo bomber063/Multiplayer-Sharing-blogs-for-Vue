@@ -1,0 +1,49 @@
+@import "../../assets/base.less";
+@import "../../assets/article.less";
+
+#detail {
+  .user-info {
+    display: grid;
+    grid: auto auto / 80px 1fr;//两行，第一列宽度80px，第二列自动撑开
+
+    margin-top: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ebebeb;
+
+    .avatar {//头像
+      grid-column: 1;//列第一根线到第二根线
+      grid-row: 1 / span 2;//行是第一根线跨了两列
+
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+    }
+
+    h3 {
+      grid-column: 2;//  2/3类似
+      grid-row: 1;//  1/2类似
+      
+      margin: 5px 0;
+
+    }
+
+    p {
+      grid-column: 2;  //2/3类似
+      grid-row: 2;  //2/3类似
+
+      margin-top: 0;
+      font-size: 12px;
+      color: @textLighterColor;
+
+      a {
+        color: @themeColor;
+        text-decoration: none;
+      }
+    }
+  }
+
+  .article {
+    padding: 30px 0;
+  }
+
+}

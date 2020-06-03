@@ -1065,5 +1065,26 @@ border-radius: 4px;
   </header>
 </template>
 ```
+### 继续完善更多内容
+#### 详情页Detail完善
+* 新建一个article.less保存文章的样式
+* 这个article也是markdown里面的html的样式。
+#### 这里我发现一个小问题bug
+* 就是在Detail的template.vue的图片请求，http的协议可以显示图片，https的协议在firefox和edge浏览器里面不可以显示图片。我把前面的https删除了,如果不删除，那么在edge和firefox浏览器里面获取不到图片。**我猜可能是非同源问题的关系**
+* 例如这里
+```html
+<p><img src="https://cloud.hunger-valley.com/18-1-12/84502177.jpg" alt="Example of align-self set to stretch"></p>
+<p>要为网格中的所有grid items 统一设置对齐方式，也可以通过  align-items 属性在网格容器上设置此行为。</p>
+```
+* 修改为
+```html
+<p><img src="//cloud.hunger-valley.com/18-1-12/84502177.jpg" alt="Example of align-self set to stretch"></p>
+```
+* 还可以增加响应式
+#### 用户页面My 
+* 这里有一个router-link标签,类似于a标签，可以跳转到to后面的路由。
+```html
+      <router-link to="/edit">编辑</router-link>
+```
 
 
