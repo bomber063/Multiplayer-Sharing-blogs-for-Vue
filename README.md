@@ -1086,5 +1086,53 @@ border-radius: 4px;
 ```html
       <router-link to="/edit">编辑</router-link>
 ```
-
+## Vuex
+* 一般父子之间传递是父组件通过props这个属性传递数据给子组件。子组件通过event的emit触发传递通知给父组件做更新。
+* 但是兄弟之间通信或者传递数据就比较麻烦了。如果通过父子传递，那么就需要传递特别多层信息才可以到达兄弟之间。
+### 创建全局的Vue对象作为事件中心
+* 创建[全局的Vue事件中心](https://cn.vuejs.org/v2/guide/migration-vuex.html#Store-%E7%9A%84%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91%E5%99%A8%E7%A7%BB%E9%99%A4)，他可以$on(监听),$off(撤销监听),$emit(分发)的方式来传递数据，但是该方法目前Vue文档说明已经被[废弃](https://cn.vuejs.org/v2/guide/migration.html#dispatch-%E5%92%8C-broadcast-%E6%9B%BF%E6%8D%A2)，但是是可以使用的，但是**不推荐了**，已经被Vuex取代，官方也推荐用[Vuex](https://vuex.vuejs.org/zh/)
+* 关于eventBus我之前有更详细的[笔记](https://github.com/bomber063/DIY-UI-frame-by-Vue-for-all/tree/tabs)
+* 如果没有eventBus或者Vuex，那么可以这么比喻
+  * 很多组件可以比喻成国家，省会，城市，县城，区，村庄，家庭。那么如果**国家有某个政策就需要一级一级的往下传递命令，家庭得到信息后返回数据也需要一级一级的向上走。就会消耗很多事件和资源，非常复杂。**
+  * 如果有一个**公共的信箱**，任何新可以往里面放东西或者拿东西，那么上面的问题就由复杂变的简单多了。**但是需要做好对应的监听和触发**。如果数据比较多，那么监听和触发也会麻烦
+  * 最后就用一个数据网络，类似Vuex，里面存了各种数据。这里把手动监听和触发也省掉了。
+* Vuex四个比较重要的概念,另外一个是module
+  * [state](https://vuex.vuejs.org/zh/guide/state.html):可以认为是最原始的数据。
+  * [getters](https://vuex.vuejs.org/zh/guide/getters.html)：类似于computed，计算属性。**getter 接受 state 作为其第一个参数，还可以接受其他getter作为第二个参数**
+  * [mutations](https://vuex.vuejs.org/zh/guide/mutations.html):**更改** Vuex 的 store 中的状态的**唯一方法是提交 mutation**,非常类似于一个事件。**它也接受state作为第一个参数，还可以另外传一个参数**。并且每一条 mutation 被**记录**。也就是通过**提交**来改变，为什么要提交，因为不是随便可以修改的，需要**提交commit**审查通过才可以更改，mutations就是这样的功能。
+    ```js
+      store.commit('increment')//这个increment就是mutations里面的函数
+    ```
+    * 你可以向 store.commit 传入**额外的参数**，即 mutation 的 载荷（payload）：
+      ```js
+      mutations: {
+        increment (state, n) {
+          state.count += n
+        }
+      }
+      ```
+      * 提交
+      ```js
+      store.commit('increment', 10)
+      ```
+      * 只支持同步
+  * [actions](https://vuex.vuejs.org/zh/guide/actions.html)：action是修改mutations的
+    ```js
+    mutations: {
+      increment (state) {
+        state.count++
+      }
+    },
+    actions: {
+      increment (context) {
+        context.commit('increment')
+      }
+    }
+    ```
+    * 还可以通过dispatch触发,Action 通过 store.dispatch 方法触发：
+      ```js
+        store.dispatch('increment')
+      ```
+    * 支持异步
+  * [module](https://vuex.vuejs.org/zh/guide/modules.html):Vuex 允许我们将 store 分割成模块（module）。每个模块拥有自己的 state、mutation、action、getter、甚至是嵌套子模块——从上至下进行同样方式的分割，可能大型的电商页面会用到。
 
