@@ -1096,6 +1096,7 @@ border-radius: 4px;
   * 很多组件可以比喻成国家，省会，城市，县城，区，村庄，家庭。那么如果**国家有某个政策就需要一级一级的往下传递命令，家庭得到信息后返回数据也需要一级一级的向上走。就会消耗很多事件和资源，非常复杂。**
   * 如果有一个**公共的信箱**，任何新可以往里面放东西或者拿东西，那么上面的问题就由复杂变的简单多了。**但是需要做好对应的监听和触发**。如果数据比较多，那么监听和触发也会麻烦
   * 最后就用一个数据网络，类似Vuex，里面存了各种数据。这里把手动监听和触发也省掉了。
+### Vuex四个比较重要的概念,另外一个是module
 * Vuex四个比较重要的概念,另外一个是module
   * [state](https://vuex.vuejs.org/zh/guide/state.html):可以认为是最原始的数据。
   * [getters](https://vuex.vuejs.org/zh/guide/getters.html)：类似于computed，计算属性。**getter 接受 state 作为其第一个参数，还可以接受其他getter作为第二个参数**
@@ -1135,4 +1136,232 @@ border-radius: 4px;
       ```
     * 支持异步
   * [module](https://vuex.vuejs.org/zh/guide/modules.html):Vuex 允许我们将 store 分割成模块（module）。每个模块拥有自己的 state、mutation、action、getter、甚至是嵌套子模块——从上至下进行同样方式的分割，可能大型的电商页面会用到。
+### Vuex使用详解
+* 简单的在[Jsbin](https://jsbin.com/jetelazitu/1/edit?html,js)上面运行代码
+#### 第一个例子单独使用Vuex
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <script src="https://unpkg.com/vue"></script>
+  <script src="https://unpkg.com/vuex"></script>
+</head>
+<body>
+  
+  <script>
+    Vue.use(Vuex)
+    
+    const store=new Vuex.Store({
+      //state里面是一个对象
+      state:{
+        weather:'晴天'
+      },
+      //mutations里面是一个函数
+      mutations:{
+        modifyWeather(state){
+          state.weather='下雨'
+          console.log(state.weather,1)
+        }
+      }
+    })
+    
+    store.commit('modifyWeather')
+    //这里触发的mutations里面的函数是字符串
+    
+  </script>
+</body>
+</html>
+```
+* 我们可以在控制台打出store
+```js
+store
+//上面打出store，下面显示Store对象的内容
+Store {_committing: false, _actions: {…}, _actionSubscribers: Array(1), _mutations: {…}, _wrappedGetters: {…}, …}
+commit: ƒ boundCommit(type, payload, options)
+dispatch: ƒ boundDispatch(type, payload)
+getters: {}
+registerModule: (e,t,o)=> {…}
+replaceState: e=>{r.initialState=w(e),t(e)}
+strict: false
+unregisterModule: e=> {…}
+_actionSubscribers: [{…}]
+_actions: {}
+_committing: false
+_devtoolHook: {_buffer: Array(1), Vue: ƒ, _replayBuffer: ƒ, on: ƒ, once: ƒ, …}
+_makeLocalGettersCache: {}
+_modules: ModuleCollection {root: Module}
+_modulesNamespaceMap: {}
+_mutations: {modifyWeather: Array(1)}
+_subscribers: [ƒ]
+_vm: Vue {_uid: 1, _isVue: true, $options: {…}, _renderProxy: Proxy, _self: Vue, …}
+_watcherVM: Vue {_uid: 0, _isVue: true, $options: {…}, _renderProxy: Proxy, _self: Vue, …}
+_wrappedGetters: {}
+state: (...)
+__proto__: Object
+```
+* 可以看到store.state显示的内容
+```js
+store.state
+//
+{__ob__: Observer}
+weather: "下雨"
+__ob__: Observer {value: {…}, dep: Dep, vmCount: 0}
+get weather: ƒ reactiveGetter()
+set weather: ƒ reactiveSetter(newVal)
+__proto__: Object
+```
+* 我们可以打出store.commit('modifyWeather')
+```js
+store.commit('modifyWeather')
+//
+下雨 1
+undefined
+```
+#### 第二个例子，Vuex结合Vue使用
+* 代码如下
+```html
+  <div id='app'></div>
+  
+  <script>
+    Vue.use(Vuex)
+    
+    const store=new Vuex.Store({
+      //state里面是一个对象
+      state:{
+        count:0,
+        firstName:'hunger',
+        lastName:'valley'
+      },
+      //mutations里面是一个函数
+      mutations:{
+        increment(state){
+          state.count++
+        }
+      }
+    })
+    const Counter={
+      template:`
+            <div>  
+              <div>{{count}}</div>
+              <div>{{firstName}}{{lastName}}</div>
+            </div>
 
+
+`,//这里的count变量是来自于计算属性computed
+      computed:{
+        count(){
+           //return this.$store.commit(increment)
+          return this.$store.state.count
+          //把Vuex的状态里面的count映射对当前组件的计算属性
+          //如果Vuex里面的数据很多，每次做上面的映射会比较麻烦，所以可以用下面的mapState
+        },
+       // firstName(){
+         // return this.$store.state.firstName
+        //},
+        //lastName(){
+          //return this.$store.state.lastName
+        //},
+        
+        ...Vuex.mapState(['firstName','lastName'])
+        //这个操作完成后得到的是一个数组，所以需要三个点操解构拿到数组里面的信息
+      }
+    }
+    
+    //this.store.commit('increment')
+    //这里触发的mutations里面的函数是字符串
+    
+    //下面是结合Vue使用
+    const app=new Vue({
+      el:'#app',
+      store,//这里就相当于store:store,
+      //这样上面就可以使用this.$store获取到 const store了。
+      components:{Counter},
+      template:`
+        <div class='app'>
+            <Counter></Counter>
+        </div>
+`
+    })
+    
+  </script>
+```
+* 通过在控制台打出Vuex可以看到
+```js
+Vuex
+{version: "3.4.0", Store: ƒ, install: ƒ, mapState: ƒ, mapMutations: ƒ, …}
+Store: ƒ Store(options)
+createNamespacedHelpers: ƒ (namespace)
+install: ƒ install(_Vue)
+mapActions: ƒ (namespace, map)
+mapGetters: ƒ (namespace, map)
+mapMutations: ƒ (namespace, map)
+mapState: ƒ (namespace, map)
+version: "3.4.0"
+__proto__: Object
+```
+* 当一个组件需要获取多个状态的时候，将这些状态都**声明为计算属性**会有些重复和冗余。为了解决这个问题，我们可以**使用 mapState 辅助函数帮助我们生成计算属性**，让你少按几次键：
+```js
+const Counter = {
+  template: `<div>{{ count }}</div>`,
+  computed: {
+    count () {
+      return this.$store.state.count
+    }
+  }
+}
+```
+* 当映射的计算属性的名称与 state 的子节点名称相同时，我们也可以给 mapState 传一个字符串数组,可以简化为
+```js
+computed: mapState([
+  // 映射 this.count 为 this.$store.state.count
+  'count'
+])
+```
+##### Vuex里面的state属性要放到组件的计算属性computed里面
+* 简单来说Vuex里面的属性要放到组件的计算属性computed里面才可以使用
+```js
+//这里的count变量是来自于计算属性computed
+      computed:{
+        count(){
+           //return this.$store.commit(increment)
+          return this.$store.state.count
+          //把Vuex的状态里面的count映射对当前组件的计算属性
+        }
+      }
+    }
+```
+##### mapState辅助函数相当于什么举例子
+* 另外这里用到[mapState辅助函数](https://vuex.vuejs.org/zh/guide/state.html#mapstate-%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0)
+```js
+//这里的count变量是来自于计算属性computed
+      computed:{
+        // 下面这两个函数就相当于最下面的...Vuex.mapState(['firstName','lastName'])
+       firstName(){
+         return this.$store.state.firstName
+        },
+        lastName(){
+          return this.$store.state.lastName
+        },
+        //
+        ...Vuex.mapState(['firstName','lastName'])
+        //这个操作完成后得到的是一个数组，所以需要三个点操解构拿到数组里面的信息，他就相当于上面的两个函数firstName和lastName函数。
+      }
+    }
+```
+##### Vue调试工具
+* 我们这里也可以用**Vue调试工具查看Vue组件和Vuex的状态**。
+* 我们通过在Vue开发者工具里面输入下面带啊吗
+```js
+store.commit('increment')
+```
+* 就可以看到count由0变成了1
+* 我们可以在Vue控制台输入
+```js
+store.state.firstName
+```
+* 就可以获取到state里面存的firstName对应的值是`"hunger"`
+* 目前位置的[JSbin代码看这里](https://jsbin.com/furewezaxi/1/edit?html,output)
+##### 想去修改就用mutation
