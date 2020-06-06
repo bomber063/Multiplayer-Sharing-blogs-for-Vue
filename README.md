@@ -1100,7 +1100,7 @@ border-radius: 4px;
 * Vuex四个比较重要的概念,另外一个是module
   * [state](https://vuex.vuejs.org/zh/guide/state.html):可以认为是最原始的数据。
   * [getters](https://vuex.vuejs.org/zh/guide/getters.html)：类似于computed，计算属性。**getter 接受 state 作为其第一个参数，还可以接受其他getter作为第二个参数**
-  * [mutations](https://vuex.vuejs.org/zh/guide/mutations.html):**更改** Vuex 的 store 中的状态的**唯一方法是提交 mutation**,非常类似于一个事件。**它也接受state作为第一个参数，还可以另外传一个参数**。并且每一条 mutation 被**记录**。也就是通过**提交**来改变，为什么要提交，因为不是随便可以修改的，需要**提交commit**审查通过才可以更改，mutations就是这样的功能。
+  * [mutations](https://vuex.vuejs.org/zh/guide/mutations.html):**更改** Vuex 的 store 中的状态的**唯一方法是提交 mutation**,非常类似于一个事件。**它也接受state作为第一个参数，还可以另外传一个参数**。并且每一条 mutation 被**记录，这个记录可以在Vue开发者工具中查看到**。也就是通过**提交**来改变，为什么要提交，因为不是随便可以修改的，需要**提交commit**审查通过才可以更改，mutations就是这样的功能。
     ```js
       store.commit('increment')//这个increment就是mutations里面的函数
     ```
@@ -1364,4 +1364,188 @@ store.state.firstName
 ```
 * 就可以获取到state里面存的firstName对应的值是`"hunger"`
 * 目前位置的[JSbin代码看这里](https://jsbin.com/furewezaxi/1/edit?html,output)
-##### 想去修改就用mutation
+##### 想去修改就用mutations
+* 增加一个click事件，并去触发add函数。add函数就去提交commit这个mutations里面的increment。代码如下
+```js
+    const store=new Vuex.Store({
+      //state里面是一个对象
+      state:{
+        count:0,
+        firstName:'hunger',
+        lastName:'valley'
+      },
+      //mutations里面是一个函数
+      mutations:{
+        increment(state){
+          state.count++
+        }
+      }
+    })
+    const Counter={
+      template:`
+            <div>  
+              <div>{{count}}</div>
+              <div>{{firstName}}{{lastName}}</div>
+              <button @click='add'>+</button>
+            </div>
+`,//这里的count变量是来自于计算属性computed
+      computed:{
+        count(){
+           //return this.$store.commit(increment)
+          return this.$store.state.count
+          //把Vuex的状态里面的count映射对当前组件的计算属性
+          //如果Vuex里面的数据很多，每次做上面的映射会比较麻烦，所以可以用下面的mapState
+        },       
+        ...Vuex.mapState(['firstName','lastName'])
+      },
+      methods:{
+        add(){
+          this.$store.commit('increment')
+        }
+      }
+    }
+```
+* [JSbin代码](https://jsbin.com/hukevaroxe/1/edit?html,output)
+##### getters的用法
+* getters类似于组件中的计算属性。
+* 只需要在Vuex.store里面增加一个getters
+* 接着上面的例子，我们可以增加一个getters。
+* 在Store里面写getters的时候**需要把state作为参数传进来，还可以传入另外一个getters作为第二个参数**。
+```js
+    Vue.use(Vuex)
+    
+    const store=new Vuex.Store({
+      state:{
+        count:0,
+        firstName:'hunger',
+        lastName:'valley'
+      },
+      mutations:{
+        increment(state){
+          state.count++
+        },
+        changeName(state){
+          state.firstName='bomber'
+        }
+      },
+      //这里是getters
+      getters:{
+        fullName(state){
+          return state.firstName+''+state.lastName
+        }
+      }
+    })
+    const Counter={
+      template:`
+            <div>  
+              <div>{{count}}</div>
+              <div>{{firstName}}{{lastName}}</div>
+              <button @click='add'>+</button>
+              <button @click='changeName'>changName</button>
+            </div>
+`,
+      computed:{
+        count(){
+          return this.$store.state.count
+        },
+        //在组件中通过计算属性引入getters的fullName
+        fullName(){
+          return this.$store.getters.fullName
+        }, 
+        ...Vuex.mapState(['firstName','lastName'])
+        //这个操作完成后得到的是一个数组，所以需要三个点操解构拿到数组里面的信息
+      },
+      methods:{
+        add(){
+          this.$store.commit('increment')
+        }
+      }
+    }
+```
+* 你也可以使用mapGetters方法引入到组件里面
+```js
+        // fullName(){
+        //   return this.$store.getters.fullName
+        // },
+        //下面的mapGetters,就相当于上面的fullName函数
+        ...Vuex.mapGetters(['fullName']),
+```
+* 我们还可以通过mutations更改state,以达到更改getters的目的,**并且通过传第二个参数获取响应的改变后的数据，这个第二个参数可以是对象也可以是普通类型，大多数情况是对象比较好，因为可以传递多个数据**。
+```js
+ <div id='app'></div>
+  
+  <script>
+    Vue.use(Vuex)
+    
+    const store=new Vuex.Store({
+      state:{
+        count:0,
+        firstName:'hunger',
+        lastName:'valley'
+      },
+      mutations:{
+        increment(state){
+          state.count++
+        },
+        modifyFirstName(state,newName){//第一个参数是state状态，第二个参数是传过来的新名字载荷newName
+          state.firstName=newName
+        }
+      },
+      getters:{
+        fullName(state){
+          return state.firstName+''+state.lastName
+        }
+      }
+    })
+    const Counter={
+      template:`
+            <div>  
+              <div>{{count}}</div>
+              <div>{{firstName}}{{lastName}}</div>
+              <button @click='add'>+</button>
+              <button @click='changeName'>changName</button>
+            </div>
+`,
+      computed:{
+        count(){
+          return this.$store.state.count
+        },
+        ...Vuex.mapGetters(['fullName']),
+        ...Vuex.mapState(['firstName','lastName'])
+
+      },
+      methods:{
+        add(){
+          this.$store.commit('increment')
+        },
+        changeName(){//这里穿了两个参数，第一个参数是函数名字，第二个参数是载荷
+          this.$store.commit('modifyFirstName','bomber')
+        }
+      }
+    }
+```
+* 具体见[JSbin代码](https://jsbin.com/juqaposiva/1/edit?html)
+* 另外Mutation 需遵守 [Vue 的响应规则](https://vuex.vuejs.org/zh/guide/mutations.html#mutation-%E9%9C%80%E9%81%B5%E5%AE%88-vue-%E7%9A%84%E5%93%8D%E5%BA%94%E8%A7%84%E5%88%99),也说到如果state里面没有的属性是增加不了的，需要使用Vue.set
+* [Mutation 必须是同步函数](https://vuex.vuejs.org/zh/guide/mutations.html#mutation-%E5%BF%85%E9%A1%BB%E6%98%AF%E5%90%8C%E6%AD%A5%E5%87%BD%E6%95%B0)
+* 也可以通过[mapMutations](https://vuex.vuejs.org/zh/guide/mutations.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E6%8F%90%E4%BA%A4-mutation) 辅助函数将组件中的 methods 映射为 store.commit 调用，在组件中使用,**不过是在方法methods中使用**，比如
+```js
+import { mapMutations } from 'vuex'
+
+export default {
+  // ...
+  methods: {
+    ...mapMutations([
+      'increment', // 将 `this.increment()` 映射为 `this.$store.commit('increment')`
+
+      // `mapMutations` 也支持载荷：
+      'incrementBy' // 将 `this.incrementBy(amount)` 映射为 `this.$store.commit('incrementBy', amount)`
+    ]),
+    ...mapMutations({
+      add: 'increment' // 将 `this.add()` 映射为 `this.$store.commit('increment')`
+    })
+  }
+}
+```
+##### actions的使用
+* 凄凄切切
+* **state和getters是放到组件的computed里面，而mutations和actions是放到组件的methods里面**。
