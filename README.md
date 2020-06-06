@@ -1406,6 +1406,8 @@ store.state.firstName
     }
 ```
 * [JSbin代码](https://jsbin.com/hukevaroxe/1/edit?html,output)
+##### mapMutations 辅助函数
+* [mutations的辅助函数](https://vuex.vuejs.org/zh/guide/mutations.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%AD%E6%8F%90%E4%BA%A4-mutation)的不同在于它要放到组件的methods里面
 #### getters的用法
 * getters类似于组件中的计算属性。
 * 只需要在Vuex.store里面增加一个getters
@@ -1462,6 +1464,7 @@ store.state.firstName
       }
     }
 ```
+##### mapGetters方法引入到组件里面
 * 你也可以使用mapGetters方法引入到组件里面
 ```js
         // fullName(){
