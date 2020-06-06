@@ -1320,7 +1320,7 @@ computed: mapState([
   'count'
 ])
 ```
-##### Vuex里面的state属性要放到组件的计算属性computed里面
+#### Vuex里面的state属性要放到组件的计算属性computed里面
 * 简单来说Vuex里面的属性要放到组件的计算属性computed里面才可以使用
 ```js
 //这里的count变量是来自于计算属性computed
@@ -1351,7 +1351,7 @@ computed: mapState([
       }
     }
 ```
-##### Vue调试工具
+#### Vue调试工具
 * 我们这里也可以用**Vue调试工具查看Vue组件和Vuex的状态**。
 * 我们通过在Vue开发者工具里面输入下面带啊吗
 ```js
@@ -1364,7 +1364,7 @@ store.state.firstName
 ```
 * 就可以获取到state里面存的firstName对应的值是`"hunger"`
 * 目前位置的[JSbin代码看这里](https://jsbin.com/furewezaxi/1/edit?html,output)
-##### 想去修改就用mutations
+#### 想去修改就用mutations
 * 增加一个click事件，并去触发add函数。add函数就去提交commit这个mutations里面的increment。代码如下
 ```js
     const store=new Vuex.Store({
@@ -1406,7 +1406,7 @@ store.state.firstName
     }
 ```
 * [JSbin代码](https://jsbin.com/hukevaroxe/1/edit?html,output)
-##### getters的用法
+#### getters的用法
 * getters类似于组件中的计算属性。
 * 只需要在Vuex.store里面增加一个getters
 * 接着上面的例子，我们可以增加一个getters。
@@ -1546,6 +1546,6 @@ export default {
   }
 }
 ```
-##### actions的使用
+#### actions的使用
 * 凄凄切切
 * **state和getters是放到组件的computed里面，而mutations和actions是放到组件的methods里面**。
