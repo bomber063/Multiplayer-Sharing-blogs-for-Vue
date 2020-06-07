@@ -1550,5 +1550,120 @@ export default {
 }
 ```
 #### actions的使用
-* 凄凄切切
+* actions 类似于 mutation，不同在于：
+    * Action 提交的是 mutation，而不是直接变更状态。
+    * Action 可以包含**任意异步操作**。
+* **mutations是直接更改状态state，但是actions是提交commit一个mutations**.
+```js
+const store = new Vuex.Store({
+  state: {
+    count: 0
+  },
+  mutations: {//直接修改数据状态
+    increment (state) {
+      state.count++
+    }
+  },
+  actions: {//通过提交commit这个mutations来修改数据状态
+    increment (context) {
+      // 这里的context就是前面的const store，但是如果涉及到Module的时候就不全是了。
+      context.commit('increment')
+    }
+  }
+})
+```
+* ES6语法
+```js
+actions: {
+  increment ({ commit }) {
+    commit('increment')
+  }
+}
+```
+* 触发一个action使用`store.dispatch`
+```js
+store.dispatch('increment')
+```
+* 来看一个更加实际的购物车示例，涉及到调用异步 API 和分发多重 mutation：
+```js
+actions: {
+  checkout ({ commit, state }, products) {//这里的{commit, state}就相当于当前的store，上下文context，store对象里面有commit和state
+    // 把当前购物车的物品备份起来
+    const savedCartItems = [...state.cart.added]
+    // 发出结账请求，然后乐观地清空购物车
+    commit(types.CHECKOUT_REQUEST)//这里就相当于context.commit(types.CHECKOUT_REQUEST)
+    // 购物 API 接受一个成功回调和一个失败回调
+    shop.buyProducts(
+      products,
+      // 成功操作
+      () => commit(types.CHECKOUT_SUCCESS),
+      // 失败操作
+      () => commit(types.CHECKOUT_FAILURE, savedCartItems)
+    )
+  }
+}
+```
+##### 在组装件中同样有mapActions
+* mapActions 辅助函数将组件的 methods **映射为 store.dispatch**调用（需要先在根节点注入 store）
+#### Vuex映射在不同位置
 * **state和getters是放到组件的computed里面，而mutations和actions是放到组件的methods里面**。
+#### Module
+*  [Module](https://vuex.vuejs.org/zh/guide/modules.html)把当前的Vuex做一个拆分，每个模块拥有自己的 state、mutation、action、getter、甚至是嵌套子模块——从上至下进行同样方式的分割：
+```js
+const moduleA = {
+  state: () => ({ ... }),
+  mutations: { ... },
+  actions: { ... },
+  getters: { ... }
+}
+
+const moduleB = {
+  state: () => ({ ... }),
+  mutations: { ... },
+  actions: { ... }
+}
+
+const store = new Vuex.Store({
+  modules: {
+    a: moduleA,
+    b: moduleB
+  }
+})
+
+store.state.a // -> moduleA 的状态
+store.state.b // -> moduleB 的状态
+```
+* 前面说了action里面的参数对象如果不是modules就是当前的store（也就是当前的Vuex对象），但是如果有modules，看下面代码
+```js
+const moduleA = {
+  // ...
+  actions: {
+    incrementIfOddOnRootSum ({ state, commit, rootState }) {//这里的{ state, commit, rootState }代表的是当前模块moduleA的Vuex对象，而不是当前的全局的Vuex对象
+    // state代表当前模块的state
+    // commit代表当前模块的commit
+    // rootState代表当前全局的state
+      if ((state.count + rootState.count) % 2 === 1) {
+        commit('increment')
+      }
+    }
+  }
+}
+```
+#### 项目结构目录示例
+* 对于大型应用，我们会希望把 Vuex 相关代码分割到模块中。下面是项目结构示例：
+```sh
+├── index.html
+├── main.js
+├── api
+│   └── ... # 抽取出API请求
+├── components
+│   ├── App.vue
+│   └── ...
+└── store
+    ├── index.js          # 我们组装模块并导出 store 的地方
+    ├── actions.js        # 根级别的 action
+    ├── mutations.js      # 根级别的 mutation
+    └── modules
+        ├── cart.js       # 购物车模块
+        └── products.js   # 产品模块
+```
