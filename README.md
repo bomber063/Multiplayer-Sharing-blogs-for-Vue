@@ -1667,3 +1667,345 @@ const moduleA = {
         ├── cart.js       # 购物车模块
         └── products.js   # 产品模块
 ```
+## vuex在项目中的使用auth模块
+* 首先在src目录下面创建一个store文件夹。里面存一个入口文件index.js
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+//分了两个模块，一个是auth，一个是blog,凡是跟用户登录注册相关的信息放到auth里面。凡是跟blog操作相关的东西放到blog里面
+import auth from './modules/auth'
+import blog from './modules/blog'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({//创造一个store对象，提供给全局的Vue使用
+  modules: {
+    auth,
+    blog
+  }
+})
+```
+* 并且创建一个modules,里面存入用户操作auth.js和博客操作blog.js,内容都包括了state,getters,mutations,actions.
+```js
+export default {
+    state:{},
+    getters:{},
+    mutations:{},
+    actions:{}
+}
+```
+* 之所以建立这么多文件，**是因为把用户博客等操作全部放到一起，内容一多，这个文件就会特别大，可读性也变差**。假设还有更多的操作，就更加复杂了。
+* [安装Vuex](https://vuex.vuejs.org/zh/installation.html)
+```sh
+npm install vuex --save
+```
+* 为了让auth.js和blog.js里面的四个核心内容更清晰，我们把这四个内容拿出来。
+```js
+import auth from '@/api/auth'
+
+const state={//类似于组件里面的data属性
+    user:null,//用户信息
+    isLogin:false//是否登录
+}
+const getters={//类似于组件里面的computed属性
+
+}
+const mutations={
+    setUser(state,payload){
+        state.user=payload.user//载荷这个对象的user属性赋值给state数据状态里面的user属性
+    },
+    setLogin(state,payload){
+        state.isLogin=payload.isLogin//载荷这个对象的isLogin属性赋值给state数据状态里面的isLogin属性
+    }
+
+}
+const actions={
+    login({commit},{username,password}){//第一个是默认参数commit,第二个是一个对象，对象里面包括用户名username和密码password
+        return auth.login({username,password})//这是底层封装好的用户登录的方法,这里return出去是为了让别的地方可以有更多操作，可以.then
+        .then((res)=>{//需要看后端接口的响应返回的代码信息
+            commit('setUser',{user:res.data})//跟前面的对象相对应，也就是对象的user里面有用户信息res.data
+            commit('setLogin',{isLogin:true})//如果登陆了，那么对象的isLogin里面就是true
+        })
+    },
+    async register({commit},{username,password}){
+        let res=await auth.register({username,password})
+        commit('setUser',{user:res.data})
+        commit('setLogin',{isLogin:true})
+    }
+}
+
+export default {
+    state,
+    getters,
+    mutations,
+    actions
+} 
+```
+### 异步改成同步的代码
+* promise.then修改为async和await
+```js
+const actions={
+    login({commit},{username,password}){
+        return auth.login({username,password})
+        .then((res)=>{
+            commit('setUser',{user:res.data})
+            commit('setLogin',{isLogin:true})
+        })
+    },
+    //上面是登陆，下面是注册，内容都差不多，但是上面是异步代码的写法，下面是用async和await的同步代码的写法，效果是一样的。
+    async register({commit},{username,password}){
+        let res=await auth.register({username,password})
+        commit('setUser',{user:res.data})
+        commit('setLogin',{isLogin:true})
+        return res.data
+    }
+}
+```
+* actions的代码补充齐全
+```js
+const actions={
+    login({commit},{username,password}){//第一个是默认参数commit,第二个是一个对象，对象里面包括用户名username和密码password
+        return auth.login({username,password})//这是底层封装好的用户登录的方法,这里return出去是为了让别的地方可以有更多操作，可以.then
+        .then((res)=>{//需要看后端接口的响应返回的代码信息
+            commit('setUser',{user:res.data})//跟前面的对象相对应，也就是对象的user里面有用户信息res.data
+            commit('setLogin',{isLogin:true})//如果登陆了，那么对象的isLogin里面就是true
+        })
+    },
+    async register({commit},{username,password}){
+        let res=await auth.register({username,password})
+        commit('setUser',{user:res.data})
+        commit('setLogin',{isLogin:true})
+    },
+    async logout({commit}){
+        await auth.logout()
+        commit('setUser',{user:null})//如果注销了，就把用户设置为最开始的null状态
+        commit('setLogin',{isLogin:false})//如果注销了，就把是否登陆状态修改为最开始的false状态
+    },
+
+    async checkLogin({commit,state}){
+        if(state.isLogin) return true
+        let res=await auth.getInfo()
+        commit('setLogin',{isLogin:res.isLogin})
+        if(!state.isLogin) return false
+        commit('setUser',{user:res.data})//这里没有登陆怎么会有这个信息。我有点疑问
+        return true
+    }
+
+    /*
+    this.checkLogin().then(isLogin=>{
+
+    })
+    */ 
+}
+```
+### 首先在header.vue组件里面使用vuex
+* 在改文件的script里面修改
+```js
+<script>
+    export default{
+      data(){
+        return {
+          isLogin:true
+          }
+      }
+    }
+</script>
+```
+* 修改为
+```js
+    import auth from '@/api/auth'
+    window.auth=auth//把auth放到window全局上面可以做注销登陆测试
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{
+          ...mapGetters([
+          'isLogin',
+          'user'
+          ])
+        },
+      created(){//组件生命周期created的时候就开始判断，也就是该组件创建的时候，数据已经OK，但是模板还没有渲染。在这里可以发送AJAX请求
+          this.checkLogin()
+      },
+      methods:{
+        ...mapActions([//这样写了之后那么checkLogin就变成了当前组件的方法，就可以使用这个checkLogin方法了
+          'checkLogin'
+          ])
+      }
+    }
+```
+* 这里我们通过在控制台注销和登陆测试
+```js
+auth.login({username:'hunger12',password:"123456"})//登陆测试
+auth.logout()//注销测试
+```
+* 这里还存在有点问题，**就是登陆后，刷新页面先是在未登录页面，然后等数据来了之后才会跳转到登陆页面，也就是闪一下的效果**,可以优化，但是这里就不做了，思路就是
+```js
+          this.checkLogin()
+          .then(function(isLogin){//在接收数据之前隐藏原来的header，
+            if(isLogin){}//在接收到数据之后在显示原来的header,但是这个时候已经渲染好了之后的登陆页面
+            })
+```
+* 修改CSS代码，也就是默认是隐藏的，当鼠标移动到上面去的时候才展示出来**我的**和**注销**文字。
+```css
+这里还需要补充分析
+```
+### 这里我把mapState和mapGetters继续分析映射到组件
+#### mapGetters
+##### 使用mapGetters数组形式
+* [mapGetters](https://vuex.vuejs.org/zh/api/#mapgetters),这里面必须要传入的是**字符串**,代码如下
+```js
+    import auth from '@/api/auth'
+    window.auth=auth
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{
+          ...mapGetters([//只能接受字符串
+          'isLogin',
+          'user'
+          ])
+        },
+      }
+    }
+```
+##### 使用mapGetters对象形式
+* 如果你想将一个 getter 属性另取一个名字，使用[对象形式](https://vuex.vuejs.org/zh/guide/getters.html#mapgetters-%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0)：key可以是变量或者字符串，**但是value必须是字符串**,代码如下:
+```js
+    import auth from '@/api/auth'
+    window.auth=auth
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{
+        ...mapGetters({//这里的value只能接受字符串,key可以是字符串
+            'isLogin':'isLogin',
+            'user':'user'
+        }) 
+      },
+    }
+    //或者写成下面也是可以的
+      computed:{
+        ...mapGetters({//这里的value只能接受字符串，key也可以是变量。
+            isLogin:'isLogin',
+            user:'user'
+        }) 
+      },
+```
+##### 不使用mapGetters
+* 代码如下
+```js
+    import auth from '@/api/auth'
+    window.auth=auth
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{
+          isLogin(){
+            // return this.$store.state.auth.isLogin//如果Vuex对象里面已经把state转存到getters里面，也可以用下面的代码
+            return this.$store.getters.isLogin
+          },
+          user(){
+            // return this.$store.state.auth.user//如果Vuex对象里面已经把state转存到getters里面，也可以用下面的代码
+            return this.$store.getters.user
+          }
+        },
+    }
+```
+#### mapState
+##### 使用mapState普通函数形式
+* 普通函数形式，可以使用this，当然也可以传入参数state。
+```js
+    import auth from '@/api/auth'
+    window.auth=auth
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{...mapState({
+          isLogin: function(){return this.$store.state.auth.isLogin},//这里可以用this,也可以传入参数state
+          user: function(){return this.$store.state.auth.user}//这里可以用this,也可以传入参数state
+            })
+        },
+      }
+```
+##### 使用mapState箭头函数形式
+* 普通函数形式，**不可以使用this**，但是可以传入参数state。
+```js
+    import auth from '@/api/auth'
+    window.auth=auth
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{...mapState({
+          isLogin:(state)=>state.auth.isLogin,//箭头函数里面没有this
+          user: (state)=>state.auth.user//箭头函数里面没有this
+            })
+          },
+    }
+```
+##### 使用mapState传字符串参数形式
+* 传字符串参数 'count' 等同于 `state => state.count`
+```js
+    import auth from '@/api/auth'
+    window.auth=auth
+    import {mapGetters,mapActions, mapState} from 'vuex'//引入vuex里面的两个函数mapGetters,mapActions，把vuex里面的状态作为映射，映射到这个组件上
+    export default{
+      data(){
+        return {
+          }
+      },
+      computed:{...mapState({
+          // 传字符串参数 'isLogin' 等同于 `state => state.isLogin`,因为这里用到了模块auth，所以这种方法就不行了，如果没有用到模块这种方法是可以行的
+          isLogin: 'isLogin',
+          user: 'user'
+            })
+          },
+    }
+```
+* [Vuex中mapState和mapGetters的区别。](https://segmentfault.com/q/1010000022337657)
+* [Vuex那些事儿,包括mapState和mapGetters的区别](https://github.com/FrankKai/FrankKai.github.io/issues/106)
+* [vue这个三个点（...mapGetters）为什么要把computed转换成数组](https://segmentfault.com/q/1010000012469852)
+### checkLogin这个Actions里面的函数分析顺序
+* 执行顺序情况
+```js
+    async checkLogin({commit,state}){
+        console.log(1,state.isLogin)
+        if(state.isLogin) return true
+        console.log(2,state.isLogin)
+
+        let res=await auth.getInfo()//一开始如果是没有登陆，就会调用getInfo方法发请求。
+        console.log(3,state.isLogin)
+
+        commit('setLogin',{isLogin:res.isLogin})
+        console.log(4,state.isLogin)
+
+        if(!state.isLogin) return false
+        console.log(5,state.isLogin)
+        commit('setUser',{user:res.data})//这里没有登陆怎么会有这个信息。我有点疑问
+        console.log(6,state.user,state.isLogin)
+        return true
+    }
+```
+
+
+
+因为这里分了两个模块，一个是auth模块，另一个是blog模块，所以这里用到state.auth。
+
