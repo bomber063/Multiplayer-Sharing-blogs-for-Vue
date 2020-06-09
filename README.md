@@ -2216,7 +2216,7 @@ export default {
     }
   }
 ```
-* 但是在**html模板中在onLogin里面传入传入载荷**，此时的`{username:username,password:password}).then(()=>{ $router.push({path:'/'})})`的value是**省去了this**,`$router`**前面的this也省去了**，因为在**模板里面是自动绑定this**。
+* 但是在**html模板中在onLogin里面传入传入载荷**，此时的`{username:username,password:password}).then(()=>{ $router.push({path:'/'})})`的value是**省去了this**,`$router`**前面的this也省去了**，因为在**模板里面是自动绑定this**。我是从[这篇文章](http://menvscode.com/detail/5a36194ea7833e528ca883df/)看到这个方式的，[Vuex官网](https://vuex.vuejs.org/zh/guide/actions.html)上面没有详细说明怎么传参数
 ```html
   <div id="login">
     <h4>用户名</h4>
