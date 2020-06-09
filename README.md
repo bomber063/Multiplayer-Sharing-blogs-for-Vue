@@ -1851,7 +1851,37 @@ auth.logout()//注销测试
 ```
 * 修改CSS代码，也就是默认是隐藏的，当鼠标移动到上面去的时候才展示出来**我的**和**注销**文字。
 ```css
-这里还需要补充分析
+  .user {
+    position: relative;
+
+    ul {
+      display: none;
+      position: absolute;
+      right: 0;
+      list-style: none;
+      border: 1px solid #eaeaea;
+      margin:0;
+      padding: 0;
+      background-color: #fff;
+
+      a {
+        text-decoration: none;
+        color: #333;
+        font-size: 12px;
+        display: block;
+        padding: 5px 10px;
+
+        &:hover {
+          background-color: #eaeaea;
+        }
+      }
+
+    }
+/* 当鼠标放上去之后把隐藏的display:none变成display：block */
+    &:hover ul {
+      display: block;
+    }
+  }
 ```
 ### 这里我把mapState和mapGetters继续分析映射到组件
 #### mapGetters
@@ -1962,7 +1992,7 @@ auth.logout()//注销测试
     }
 ```
 ##### 使用mapState传字符串参数形式
-* 传字符串参数 'count' 等同于 `state => state.count`
+* 传字符串参数 'count' 等同于 `state => state.count`，这里用到了模块modules，所以这个方法在这种情况最好不用。
 ```js
     import auth from '@/api/auth'
     window.auth=auth
@@ -1983,28 +2013,116 @@ auth.logout()//注销测试
 * [Vuex中mapState和mapGetters的区别。](https://segmentfault.com/q/1010000022337657)
 * [Vuex那些事儿,包括mapState和mapGetters的区别](https://github.com/FrankKai/FrankKai.github.io/issues/106)
 * [vue这个三个点（...mapGetters）为什么要把computed转换成数组](https://segmentfault.com/q/1010000012469852)
-### checkLogin这个Actions里面的函数分析顺序
-* 执行顺序情况
+### checkLogin这个Actions里面的函数分析
+* 执行顺序及返回的值，还有state和state.isLogin里面的值是true和false的分析。具体看下面代码的注释
 ```js
     async checkLogin({commit,state}){
-        console.log(1,state.isLogin)
-        if(state.isLogin) return true
-        console.log(2,state.isLogin)
+        console.log(1,state,state.isLogin)
+        // 这里如果isLogin已经改变了，那么是在后面的发请求后才发生改变的，所以state。isLogin在这里是false，但是你通过查看state这个状态对象里面发现，点开isLogin是true。
+        if(state.isLogin) { console.log('HI'); return true}//如果isLogin已经是true就直接退出，返回true
+        console.log(2,state,state.isLogin)
 
         let res=await auth.getInfo()//一开始如果是没有登陆，就会调用getInfo方法发请求。
-        console.log(3,state.isLogin)
+        console.log(3,state,state.isLogin)
 
         commit('setLogin',{isLogin:res.isLogin})
-        console.log(4,state.isLogin)
+        console.log(4,state)
 
-        if(!state.isLogin) return false
+        if(!state.isLogin) return false//这个是通过发送请求后，获取到后端返回的isLogin是登陆true状态还是未登录false状态，如果是false就直接退出并返回false
         console.log(5,state.isLogin)
-        commit('setUser',{user:res.data})//这里没有登陆怎么会有这个信息。我有点疑问
+        commit('setUser',{user:res.data})//如果是登陆true状态才会执行这里，就是把用户信息保存在Vuex的auth模块的state数据的user里面。
         console.log(6,state.user,state.isLogin)
         return true
     }
 ```
+### 注销的三种方式
+* 模板中有一个`@click="onLogout"`
+```html
+    <template v-if="isLogin">
+      <!-- 两个根元素header必须要用v-if,v-else-if不然会报错 -->
+      <h1>Let's share</h1>
+      <i class="edit el-icon-edit"></i>
+      <div class="user">
+        <img class="avatar" :src="user.avatar" :alt="user.username" :title="user.username">
+        <ul>
+          <li><router-link to="/my">我的</router-link></li>
+          <!-- 这里的onLogout,前面有一个on是为了防止和别的地方的注销名字重名 -->
+          <li><a href="#" @click="onLogout">注销</a></li>
+        </ul>
+      </div>  
+    </template>
+```
+* **第一种方式**，直接手写。
+```js
+      methods:{
+        ...mapActions([//这样写了之后那么checkLogin就变成了当前组件的方法，就可以使用这个checkLogin方法了
+          'checkLogin'
+          ]),
+        onLogout(){
+          auth.logout()
+          this.$store.commit('setUser',{user:null})//如果注销了，就把用户设置为最开始的null状态
+         this.$store.commit('setLogin',{isLogin:false})//如果注销了，就把是否登陆状态修改为最开
+        }
+      }
+```
+* **第二种方式**，用mapActions引入logout方法，因为logout方法中已经有下面两段代码了，
+```js
+    async logout({commit}){
+        await auth.logout()
+        commit('setUser',{user:null})//如果注销了，就把用户设置为最开始的null状态
+        commit('setLogin',{isLogin:false})//如果注销了，就把是否登陆状态修改为最开始的false状态
+    },
+```
+* 所以可以省去一些代码，可以写成
+```js
+      methods:{
+        ...mapActions([//这样写了之后那么checkLogin就变成了当前组件的方法，就可以使用这个checkLogin方法了
+          'checkLogin',
+          'logout'//引入这个logout
+          ]),
+        onLogout(){
+          // auth.logout()
+          this.logout()//下面的两段代码已经在引入的logout里面存在了，所以可以省去。
+          // this.$store.commit('setUser',{user:null})//如果注销了，就把用户设置为最开始的null状态
+        //  this.$store.commit('setLogin',{isLogin:false})//如果注销了，就把是否登陆状态修改为最开始的false状态
+        }
+      }
+```
+* **第三种方式**，直接手写，但是需要[刷新页面](https://blog.csdn.net/g_blue_wind/article/details/51828788),**因为注销后页面不会自动变化需要刷新页面后才会变化**。
+```js
+      methods:{
+        ...mapActions([//这样写了之后那么checkLogin就变成了当前组件的方法，就可以使用这个checkLogin方法了
+          'checkLogin'
+          ]),
+        onLogout(){
+          auth.logout()
+          location.reload()
+        }
+      }
+```
+### 登陆注册路由vue-router链接
+* 登陆的代码修改,这里通过vue-router去改变路由，所以最好用vue-router，不要用a标签。
+* 这里把router-link标签放到el-button标签的外面，**因为router-link会自动加一个a标签，如果放到里面会影响span标签字体的样式，放到外面就不会影响字体的样式了**。
+```html
+    <router-link to="./login"><el-button>立即登录</el-button></router-link>
+    <router-link to="./register"><el-button>注册账号</el-button></router-link>
+```
+* 如果用a标签那么url最后会变成下面的，也可以就是哈希#这个符号
+```sh
+http://localhost:8080/login
 
+```
+* 如果用vue-router那么就会变成下面，有一个哈希#符号。当然后面还可以增加参数和配置。
+```sh
+http://localhost:8080/#/login
+```
+* 这里把a标签的样式在asserts目录的common.less里面增加
+```css
+a {
+    text-decoration: none;
+    color: #333;
+  }
+```
 
 
 因为这里分了两个模块，一个是auth模块，另一个是blog模块，所以这里用到state.auth。

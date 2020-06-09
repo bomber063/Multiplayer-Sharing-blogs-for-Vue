@@ -19,8 +19,8 @@
       <h1>Let's share</h1>
       <p>精品博客汇聚</p>
       <div class="btns">
-        <el-button>立即登录</el-button>
-        <el-button>注册账号</el-button>
+        <router-link to="./login"><el-button>立即登录</el-button></router-link>
+        <router-link to="./register"><el-button>注册账号</el-button></router-link>
       </div>
     </template>
     <template v-if="isLogin">
@@ -31,7 +31,8 @@
         <img class="avatar" :src="user.avatar" :alt="user.username" :title="user.username">
         <ul>
           <li><router-link to="/my">我的</router-link></li>
-          <!-- <li><a href="#" @click="onLogout">注销</a></li> -->
+          <!-- 这里的onLogout,前面有一个on是为了防止和别的地方的注销名字重名 -->
+          <li><a href="#" @click="onLogout">注销</a></li>
         </ul>
       </div>  
     </template>
@@ -78,20 +79,30 @@
           //  }) 
           },
       created(){//组件生命周期created的时候就开始判断，也就是该组件创建的时候，数据已经OK，但是模板还没有渲染。在这里可以发送AJAX请求
-          this.checkLogin().then(function(res){console.log(111111,res)})
-          console.log('header组件',this.$store.getters.isLogin)
-          console.log('header组件',this.$store.state.auth.isLogin)
-          console.log('header组件',this.isLogin)
-          setTimeout(()=>{
-          console.log('header组件',this.$store.getters.isLogin)
-          console.log('header组件',this.$store.state.auth.isLogin)
-          console.log('header组件',this.isLogin)
-          },1000)
+          this.checkLogin().then(function(res){console.log('返回的结果',res)})
+          // console.log('header组件',this.$store.getters.isLogin)
+          // console.log('header组件',this.$store.state.auth.isLogin)
+          // console.log('header组件',this.isLogin)
+          // setTimeout(()=>{
+          // console.log('header组件',this.$store.getters.isLogin)
+          // console.log('header组件',this.$store.state.auth.isLogin)
+          // console.log('header组件',this.isLogin)
+          // },1000)
       },
       methods:{
         ...mapActions([//这样写了之后那么checkLogin就变成了当前组件的方法，就可以使用这个checkLogin方法了
-          'checkLogin'
-          ])
+          'checkLogin',
+          'logout'
+          ]),
+        onLogout(){
+          // auth.logout()
+          this.logout()
+          // this.$store.commit('logout',false)
+          // this.$store.commit('setUser',{user:null})//如果注销了，就把用户设置为最开始的null状态
+        //  this.$store.commit('setLogin',{isLogin:false})//如果注销了，就把是否登陆状态修改为最开始的false状态
+          // this.$store.state.auth.isLogin=false
+          // location.reload()
+        }
       }
     }
 </script>
@@ -184,7 +195,7 @@ header.login {
       }
 
     }
-
+// 当鼠标放上去之后把隐藏的display:none变成display：block
     &:hover ul {
       display: block;
     }
