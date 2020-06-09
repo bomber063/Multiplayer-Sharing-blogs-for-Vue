@@ -2123,7 +2123,113 @@ a {
     color: #333;
   }
 ```
+### 登录注册的功能实现
+#### 在pages/Login目录下登陆功能
+* template.vue增加部分代码，包括input上面的v-model
+```html
+  <div id="login">
+    <h4>用户名</h4>
+    <input v-model="username" placeholder="用户名">
+    <h4>密码</h4>
+    <input v-model="password" type="password" placeholder="密码" @keyup.enter="onLogin" >
+    <el-button size="medium" @click="onLogin">立即登录</el-button>
+    <p class="notice">没有账号？<router-link to="/register">注册新用户</router-link></p>
+  </div>
+```
+* 因为v-model绑定的数据会修改，那么我们需要在数据的data里面写上这个绑定的数据username和password。
+```js
+    data () {
+      return {
+        // msg: 'Welcome to Your Vue.js App',
+        username:'',
+        password:''
+      }
+    },
+```
+* 这里用到[修饰符](https://cn.vuejs.org/v2/guide/events.html#%E6%8C%89%E9%94%AE%E4%BF%AE%E9%A5%B0%E7%AC%A6),这里是[keyup](https://developer.mozilla.org/zh-TW/docs/Web/API/Document/keyup_event)事件,當鍵盤上的手指離開按鍵時，keyup事件會被觸發。
+```html
+    <!-- 输入完密码按回车也可以调用onLogin，用到按键修饰符——@keyup.enter -->
+    <!-- 只有在 `key` 是 `Enter` 时调用 `vm.onLogin()` -->
+    <input v-model="password" type="password" placeholder="密码" @keyup.enter="onLogin" >
+```
+* 然后我们就可以onLogin方法通过console.log打印出来测试**点击**和**回车键**。
+```js
+    methods:{
+      onLogin(){
+        console.log(this.username+':'+this.password)
+      }
+    }
+```
+#### 登陆的三种方法
+* 第一种,**不使用mapActions函数**，直接用`store.dispatch('login')`触发
+```js
+      onLogin(){
+        // 虽然在auth.js里面的login有两个参数也就是login({commit},{username,password}),但是在组件上只有后面一个参数，也就是{username,password}。
+        this.$store.dispatch('login',{username:this.username,password:this.password})
+        .then(()=>{
+              this.$router.push({path:'/'})
+          })
+      }
+    }
+```
+* 第二种,通过映射mapActions函数，将 `this.increment()` 映射为 `this.$store.dispatch('increment')`
+```js
+import {mapActions} from 'vuex'
+
+    methods:{
+      input(){
+        
+      },
+      onLogin(){
+        console.log(this.username+':'+this.password)
+        // 虽然在auth.js里面的login有两个参数也就是login({commit},{username,password}),但是在组件上只有后面一个参数，也就是{username,password}。
+        this.login({username:this.username,password:this.password})
+        .then(()=>{
+            this.$router.push({path:'/'})
+        })
+      },
+      ...mapActions([
+        // onLogin:'login'
+        'login'// 将 `this.login()` 映射为 `this.$store.dispatch('login')`
+      ])
+    }
+```
+* 第三种，就是通过映射mapActions函数,将 `this.onLogin()` 映射为 `this.$store.dispatch('login')`
+```js
+import {mapActions} from 'vuex'
+
+export default {
+    data () {
+      return {
+        // msg: 'Welcome to Your Vue.js App',
+        username:'',
+        password:''
+      }
+    },
+    methods:{
+      input(){
+        
+      },
+      ...mapActions({
+        onLogin:'login'//将 `this.onLogin()` 映射为 `this.$store.dispatch('login')`
+    })
+    }
+  }
+```
+* 但是在**html模板中在onLogin里面传入传入载荷**，此时的`{username:username,password:password}).then(()=>{ $router.push({path:'/'})})`的value是**省去了this**,`$router`**前面的this也省去了**，因为在**模板里面是自动绑定this**。
+```html
+  <div id="login">
+    <h4>用户名</h4>
+    <input v-model="username" placeholder="用户名">
+    <h4>密码</h4>
+    <!-- 输入完密码按回车也可以调用onLogin，用到按键修饰符——@keyup.enter -->
+    <!-- 只有在 `key` 是 `Enter` 时调用 `vm.onLogin()` -->
+    <input v-model="password" type="password" placeholder="密码" @keyup.enter="onLogin({username:username,password:password}).then(()=>{ $router.push({path:'/'})})" >
+    <el-button size="medium" @click="onLogin({username:username,password:password}).then(()=>{ $router.push({path:'/'})})">立即登录</el-button>
+    <p class="notice">没有账号？<router-link to="/register">注册新用户</router-link></p>
+  </div>
+```
 
 
-因为这里分了两个模块，一个是auth模块，另一个是blog模块，所以这里用到state.auth。
-
+### 其他
+* [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
