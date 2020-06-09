@@ -2172,7 +2172,7 @@ a {
       }
     }
 ```
-* 第二种,通过映射mapActions函数，将 `this.increment()` 映射为 `this.$store.dispatch('increment')`
+* 第二种,**通过映射mapActions函数**，将 `this.increment()` 映射为 `this.$store.dispatch('increment')`
 ```js
 import {mapActions} from 'vuex'
 
@@ -2194,7 +2194,7 @@ import {mapActions} from 'vuex'
       ])
     }
 ```
-* 第三种，就是通过映射mapActions函数,将 `this.onLogin()` 映射为 `this.$store.dispatch('login')`
+* 第三种，就是**通过映射mapActions函数**,将 `this.onLogin()` 映射为 `this.$store.dispatch('login')`
 ```js
 import {mapActions} from 'vuex'
 
@@ -2229,7 +2229,46 @@ export default {
     <p class="notice">没有账号？<router-link to="/register">注册新用户</router-link></p>
   </div>
 ```
+#### 在pages/Login目录下注册功能
+* 这里跟登陆很相似。
+```js
+import {mapActions} from 'vuex'
 
-
+export default {
+    data () {
+      return {
+        username:'',
+        password:''
+      }
+    },
+    methods:{
+      onRegister(){
+        this.register({username:this.username,password:this.password})
+        .then(()=>{
+          this.$router.push({path:'/'})
+        })
+      },
+      ...mapActions([
+        'register'
+      ])
+    }
+  }
+```
+* 这里就说一下大概的逻辑。
+  1. 当用户点击按钮或者按回车键的时候，会调用函数onRegister.
+  2. 这个onRegister里面有一个this.register函数(它是通过mapActions映射过来的函数)去执行。
+  3. 然后会去找data里面的username和password。这个是通过v-model绑定后，用户可以传递这两个数据。
+  4. 然后会去methods里面找register方法(它是通过mapActions映射过来的函数)。
+  5. mapActions函数是通过import传入过来。
+  6. mapActions得到的是一个对象，通过[展开语法](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Spread_syntax),也就是三个点，可以把对象解构为属性key是register,对应的key值也是register这个函数。
+  7. this.register也就是modules目录里面的auth.js函数会执行更新user信息和isLogin状态
+  8. header组件通过mapGetters函数把user和isLogin拿到，对应的getters里面的user和isLogin也更新了。
+  9. 然后header组件的模板template的class类和图片的src和v-if判断等都会更新
+      ```html
+        <header :class="{login: isLogin, 'no-login': !isLogin}"> 
+          <img class="avatar" :src="user.avatar" :alt="user.username" :title="user.username">
+      ```
+* 所以看起来很简单，但是中间内部做了很多事情，我们不用考虑组件之间的数据传递，大量简化了代码。
+  
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)

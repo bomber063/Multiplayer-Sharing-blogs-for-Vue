@@ -30,6 +30,7 @@ const actions={
         let res=await auth.register({username,password})
         commit('setUser',{user:res.data})
         commit('setLogin',{isLogin:true})
+        //这个地方注册成功就直接跳转到博客首页
     },
     async logout({commit}){
         await auth.logout()
