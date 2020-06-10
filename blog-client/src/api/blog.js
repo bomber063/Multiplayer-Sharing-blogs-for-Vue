@@ -29,7 +29,7 @@ export default {//这里结合了/helpers/request里面的request请求有三个
     return request(URL.UPDATE.replace(':blogId', blogId), 'PATCH', { title, content, description, atIndex })
   },
 
-  deleteBlog({ blogId }) {//除博客 id 为:blogId 的博客，也是通过替换:blogId
+  deleteBlog({ blogId }) {//删除博客 id 为:blogId 的博客，也是通过替换:blogId
     return request(URL.DELETE.replace(':blogId', blogId), 'DELETE')
   },
 

@@ -2269,6 +2269,112 @@ export default {
           <img class="avatar" :src="user.avatar" :alt="user.username" :title="user.username">
       ```
 * 所以看起来很简单，但是中间内部做了很多事情，我们不用考虑组件之间的数据传递，大量简化了代码。
-  
+### 路由完善、异步加载、权限控制
+* 当点开某个用户的文章的时候怎么知道是哪个用户，这里就需要把路由完善一下，让后端知道是哪个用户被点击了。
+* 这里需要用到后端的data里面的id属性。需要的路由包括详情(detail),编辑(edit),某个用户的博客列表(user)
+```js
+Vue.use(Router)
+export default new Router({
+  routes: [
+    {
+      path: '/detail/:blogId',//某个博客的博客详情
+      component: Detail
+    },
+    {
+      path: '/edit/:blogId',//编辑某个博客
+      component: Edit
+    },     
+    {
+      path: '/user/:userId',//某个用户的博客列表
+      component: User
+    }
+  ]
+})
+```
+* 我们用到[路由元信息](https://router.vuejs.org/zh/guide/advanced/meta.html)。
+* 用到[全局前置守卫](https://router.vuejs.org/zh/guide/advanced/navigation-guards.html#%E5%85%A8%E5%B1%80%E5%89%8D%E7%BD%AE%E5%AE%88%E5%8D%AB)
+  * 每个守卫方法接收三个参数：
+
+  * to: Route: 即将要进入的目标 路由对象
+
+  * from: Route: 当前导航正要离开的路由
+
+next: Function: 一定要调用该方法来 resolve 这个钩子。执行效果依赖 next 方法的调用参数。
+* 这个信息就可以控制哪些页面是必须要登陆之后才可以看到，哪些是不用登陆也可以看到的。包括了创建博客(create)页面，编辑(edit)博客页面，我的(my)博客页面。
+```js
+export default new Router({
+  routes: [
+    {
+      path: '/create',
+      component: Create,
+      meta:{requiresAuth:true}
+    },
+    {
+      path: '/edit/:blogId',
+      component: Edit,
+      meta:{requiresAuth:true}
+    },     
+    {
+      path: '/my',
+      component: My,
+      meta:{requiresAuth:true}
+    },    
+  ]
+})
+```
+* 我们只需要在全局导航守卫中检查元字段就OK了。也就是`meta:{requiresAuth:true}`
+* [$route.matched](https://router.vuejs.org/zh/api/#%E8%B7%AF%E7%94%B1%E5%AF%B9%E8%B1%A1%E5%B1%9E%E6%80%A7),他是一个数组，包含当前路由的所有嵌套路径片段的路由记录 。路由记录就是 routes 配置数组中的对象副本 (还有在 children 数组)。
+  * 当 URL 为 /foo/bar，$route.matched 将会是一个包含从上到下的所有对象 (副本)。
+* 这里还用到了[Array.prototype.some()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/some),some() 方法测试数组中是不是**至少有1个元素通过了被提供的函数测试。它返回的是一个Boolean类型的值**。
+* 这里的登陆状态判断**不要使用store.getters.isLogin或者store.state.auth.isLogin判断，因为这里需要发请求后才会登陆，那么就是一个异步的过程，那么返回数据之前就已经执行了代码那么就算登陆状态是true，执行的代码还是false,所以这里需要用到异步处理状态**。也就是Actions.所以这里使用`store.dispatch('checkLogin').`
+* 查询参数的跳转
+  ```js
+    query: { redirect: to.fullPath }//并提供一些查询参数,可以跳转到之前的页面，也就是说如果之前的路径是edit/3，那么会先跳转到登陆页面输入正确账号和密码后，成功登陆会跳转到edit/3这个页面。
+  ```
+* **全部注释**的代码如下
+```js
+import store from '../store'
+
+const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
+  routes: [
+        //这里面省略掉
+  ]
+})
+
+//每一个历史记录进行匹配遍历
+router.beforeEach((to, from, next) => {//这里的router就是前面创建的new Router对象，beforeEach就是每一次路由切换都会去执行里面的代码
+  if (to.matched.some(record => record.meta.requiresAuth)) {//这里用到$route.matched和原生的数组的API——some(),检查是否存在meta.requiresAuth为真值的，如果有就返回true
+// 这里的!store.getters.isLogin是发了请求后在从false改为true的，但是这句代码在发请求前已经执行了。所以来不及等到请求后修改的正确值，就算是登陆了用了还是false。所以要用异步的checkLogin来判断是否登陆
+
+    store.dispatch('checkLogin').then(isLogin=>{
+      // if (!store.getters.isLogin)//这个判断对于异步不可信，要用dispatch
+      if (!isLogin) {//看看是不是登陆状态，没有登陆就进入到登陆页面,这里需要用到Vuex里面状态来判断，不需要再次发请求判断
+        // 这里因为使用了模块modules，使用state的时候就需要用到store.state.auth.isLogin,如果用getters就不需要考了modules，可以是store.getters.isLogin,但是这个方法暂时不可信，因为这里要发请求是异步的，所以要用到checkLogin
+        next({
+          path: '/login',//如果没有登陆，那么就跳转到/login页面
+          query: { redirect: to.fullPath }//并提供一些查询参数,可以跳转到之前的页面，也就是说如果之前的路径是edit/3，那么会先跳转到登陆页面输入正确账号和密码后，成功登陆会跳转到edit/3这个页面。
+        })
+      } else {//如果登陆了就直接下一步
+        next()
+      }
+    })
+
+  } else {
+    next() // 确保一定要调用 next()
+  }
+})
+
+export default router
+```
+* 跳转到首页修改为跳转到查询参数上面，在Login文件中
+* **注意前面的是$router，后面的是$route**。这里我写错了看了半天才发现。
+  * [vue $router和$route的区别](https://blog.csdn.net/wangguoyu1996/article/details/80628135)
+  * [this.$route和this.$router的区别](https://blog.csdn.net/gaoqiang1112/article/details/79850604)
+```js
+    .then(()=>{
+        this.$router.push({path:this.$router.query.redirect||'/'})//如果没有查询参数才跳转到首页，有就跳转到之前的页面,前面的是$router，后面的是$route
+    })
+```
+* chrome上面自动保存密码的设置，在设置->你与google->自动填充->密码里面。
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)

@@ -18,7 +18,7 @@ export default {
           // })
         this.login({username:this.username,password:this.password})
         .then(()=>{
-            this.$router.push({path:'/'})
+            this.$router.push({path:this.$route.query.redirect||'/'})//如果没有查询参数才跳转到首页，有就跳转到之前的页面,前面的是$router，后面的是$route
         })
       },
       ...mapActions([
