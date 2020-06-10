@@ -2376,5 +2376,143 @@ export default router
     })
 ```
 * chrome上面自动保存密码的设置，在设置->你与google->自动填充->密码里面。
+### 发布前需要做的事情
+#### npm run build编译打包
+* 就是运行下面代码
+```sh
+npm run build
+```
+* 他会把我们做的事情都打包生成JS文件。然后出现在**dist目录下面**
+  * 包括static文件夹。里面有CSS，JS，font。
+  * 还有一个index.html
+* 我们之前写的一堆的代码就变成了dist目录下面的文件和代码。
+* 运行后显示如下代码
+```sh
+$ npm run build
+
+> blog-client@1.0.0 build D:\jirengu\github收集\Multiplayer Sharing blogs for Vue\blog-client
+> node build/build.js
+
+Hash: 5dacb7dc627b893d3307
+Version: webpack 3.12.0
+Time: 19619ms
+                                                  Asset       Size  Chunks                   Chunk Names
+    static/css/app.64217e412322166b26d39138141a22ca.css     238 kB       1  [emitted]        app
+                static/fonts/element-icons.535877f.woff    28.2 kB          [emitted]    
+               static/js/vendor.c3e7996854f784ff3253.js     866 kB       0  [emitted]  [big]  vendor
+                  static/js/app.d2f94c66cb530979223a.js    87.1 kB       1  [emitted]        app
+             static/js/manifest.2ae2e69a05c33dfc65f8.js  857 bytes       2  [emitted]        manifest
+                 static/fonts/element-icons.732389d.ttf      56 kB          [emitted]    
+static/css/app.64217e412322166b26d39138141a22ca.css.map     341 kB          [emitted]    
+           static/js/vendor.c3e7996854f784ff3253.js.map    3.45 MB       0  [emitted]        vendor
+              static/js/app.d2f94c66cb530979223a.js.map     205 kB       1  [emitted]        app
+         static/js/manifest.2ae2e69a05c33dfc65f8.js.map    4.97 kB       2  [emitted]        manifest
+                                             index.html  513 bytes          [emitted]    
+
+  Build complete.
+
+  Tip: built files are meant to be served over an HTTP server.
+  Opening index.html over file:// won't work.
+```
+* 这里面的代码运行需要http协议，不可以用file协议哦。
+* 我们可以切换到dist目录下面安装目录http-server,并且运行下面代码就可以代码了，可以在浏览器中查看效果。
+```sh
+http-server . -c-1
+```
+* 并且我们可以在Chrome浏览器控制台的network中看到请求获取到一些文件，其中一个比较大的文件是vendor开头的js文件
+* 我们通过修改不同路径可以获取不同路径的请求和响应，但是JS文件是不会加载了。
+* 也就是说**他是一次性把JS文件加载完了，这样第一次加载就会比较慢，如果考虑只加载首页就会快很多，性能优化一些，比如懒加载，懒加载可以在你登陆页面的时候加载登陆页面，编辑页面的时候只加载编辑页面，当然已经加载过的返回就不会再次加载了。**
+#### 懒加载实现
+* 我们不用一开始就import
+* 原来代码
+```js
+import Vue from 'vue'
+import Router from 'vue-router'
+import Create from '@/pages/Create/template.vue'
+import Detail from '@/pages/Detail/template.vue'
+...//这里组件名字和引入就省略了
+import store from '../store'
+window.store=store
+Vue.use(Router)
+const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
+  routes: [
+    {
+      path: '/create',
+      component: Create,
+      meta:{requiresAuth:true}
+    },
+    ...//这里的省略了
+  ]
+})
+```
+* 修改为
+```js
+//通过异步函数使用该路由的时候在加载某个组件获取网页
+const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
+  routes: [
+    {
+      path: '/create',
+      component: () => import('@/pages/Create/template.vue'),
+      meta:{requiresAuth:true}
+    },
+    {
+      path: '/detail/:blogId',
+      component: () => import('@/pages/Detail/template.vue')
+    },
+    ...//这里的其他组件名字和引入省略
+  ]
+})
+```
+* 这样就可以通过异步的方式加载某个组件，**就不会第一次全部加载完了**。
+* 我们重新做一次编译打包
+```sh
+npm run build
+```
+* 运行后代码，**发现多了很多文件,这里的文件前面的数字12345......对应的就是不同的页面**
+```sh
+$ npm run build
+
+> blog-client@1.0.0 build D:\jirengu\github收集\Multiplayer Sharing blogs for Vue\blog-client
+> node build/build.js
+
+Hash: d3297ef74398c5125cef
+Version: webpack 3.12.0
+Time: 21107ms
+                                                  Asset       Size  Chunks                   Chunk Names
+    static/css/app.14e1e30569593a52fd602c7559b6e65c.css     238 kB       9  [emitted]        app
+                static/fonts/element-icons.535877f.woff    28.2 kB          [emitted]    
+                    static/js/0.1124ae0415c67ca53bf3.js  469 bytes       0  [emitted]    
+                    static/js/1.93187f0a6d8e73bfc3b4.js    72.5 kB       1  [emitted]    
+                    static/js/2.349d692ad6e731f9a37b.js    1.55 kB       2  [emitted]    
+                    static/js/3.895300774fabd257d72b.js  469 bytes       3  [emitted]    
+                    static/js/4.e4150f1da1c1ddd7a724.js    2.35 kB       4  [emitted]    
+                    static/js/5.1c6d626af006c9ad4319.js    1.61 kB       5  [emitted]    
+                    static/js/6.04d7b374e0bb692a6ae8.js    3.43 kB       6  [emitted]    
+                    static/js/7.1c0ddadbe7567b98f972.js  540 bytes       7  [emitted]    
+               static/js/vendor.6cf57b247bf765488458.js     866 kB       8  [emitted]  [big]  vendor
+                  static/js/app.b605cdde5777851d86a6.js     6.3 kB       9  [emitted]        app
+             static/js/manifest.c0764196ed2aeb6df688.js    1.64 kB      10  [emitted]        manifest
+                 static/fonts/element-icons.732389d.ttf      56 kB          [emitted]    
+static/css/app.14e1e30569593a52fd602c7559b6e65c.css.map     341 kB          [emitted]    
+                static/js/0.1124ae0415c67ca53bf3.js.map    3.26 kB       0  [emitted]    
+                static/js/1.93187f0a6d8e73bfc3b4.js.map     133 kB       1  [emitted]    
+                static/js/2.349d692ad6e731f9a37b.js.map    6.04 kB       2  [emitted]    
+                static/js/3.895300774fabd257d72b.js.map    3.26 kB       3  [emitted]    
+                static/js/4.e4150f1da1c1ddd7a724.js.map    6.78 kB       4  [emitted]    
+                static/js/5.1c6d626af006c9ad4319.js.map    6.76 kB       5  [emitted]    
+                static/js/6.04d7b374e0bb692a6ae8.js.map    10.7 kB       6  [emitted]    
+                static/js/7.1c0ddadbe7567b98f972.js.map    3.46 kB       7  [emitted]    
+           static/js/vendor.6cf57b247bf765488458.js.map    3.45 MB       8  [emitted]        vendor
+              static/js/app.b605cdde5777851d86a6.js.map    36.4 kB       9  [emitted]        app
+         static/js/manifest.c0764196ed2aeb6df688.js.map    8.09 kB      10  [emitted]        manifest
+                                             index.html  513 bytes          [emitted]    
+
+  Build complete.
+
+  Tip: built files are meant to be served over an HTTP server.
+  Opening index.html over file:// won't work.
+
+```
+* 这次你打开Chrome浏览器控制台，查看首次进入主页页面后就不会加载其他路由页面的资源，**当改变其他路由的时候，会看到再次加载了其他路由对应页面的资源信息显示。**
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)

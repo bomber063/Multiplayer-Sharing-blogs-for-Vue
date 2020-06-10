@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+/*
 import Create from '@/pages/Create/template.vue'
 import Detail from '@/pages/Detail/template.vue'
 import Edit from '@/pages/Edit/template.vue'
@@ -8,11 +9,12 @@ import Login from '@/pages/Login/template.vue'
 import My from '@/pages/My/template.vue'
 import Register from '@/pages/Register/template.vue'
 import User from '@/pages/User/template.vue'
-import auth from '../store/modules/auth'
+*/
 import store from '../store'
 window.store=store
 Vue.use(Router)
 
+/*
 const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
   routes: [
     {
@@ -49,6 +51,47 @@ const router= new Router({//创建一个new Router对象，里面有对应的路
     {
       path: '/user/:userId',//某个用户的博客
       component: User
+    }
+  ]
+})
+*/
+//通过异步函数使用该路由的时候在加载某个组件获取网页
+const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
+  routes: [
+    {
+      path: '/create',
+      component: () => import('@/pages/Create/template.vue'),
+      meta:{requiresAuth:true}
+    },
+    {
+      path: '/detail/:blogId',
+      component: () => import('@/pages/Detail/template.vue')
+    },
+    {
+      path: '/edit/:blogId',
+      component: () => import('@/pages/Edit/template.vue'),
+      meta:{requiresAuth:true}
+    },    
+    {
+      path: '/',
+      component: () => import('@/pages/Index/template.vue')
+    },
+    {
+      path: '/login',
+      component: () => import('@/pages/Login/template.vue')  
+    },
+    {
+      path: '/register',
+      component: () => import('@/pages/Register/template.vue')  
+    },  
+    {
+      path: '/my',
+      component: () => import('@/pages/My/template.vue'),
+      meta:{requiresAuth:true}
+    },      
+    {
+      path: '/user/:userId',//某个用户的博客
+      component: () => import('@/pages/User/template.vue')
     }
   ]
 })
