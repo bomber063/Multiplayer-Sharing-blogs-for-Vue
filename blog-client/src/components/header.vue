@@ -25,8 +25,8 @@
     </template>
     <template v-if="isLogin">
       <!-- 两个根元素header必须要用v-if,v-else-if不然会报错 -->
-      <h1>Let's share</h1>
-      <i class="edit el-icon-edit"></i>
+      <h1><router-link to="/" >Let's share</router-link></h1>
+      <router-link to="/create" ><i class="edit el-icon-plus"></i></router-link>
       <div class="user">
         <img class="avatar" :src="user.avatar" :alt="user.username" :title="user.username">
         <ul>
@@ -121,6 +121,7 @@ header.no-login {
     font-size: 40px;
     margin: 60px 0 0 0;
     text-transform: uppercase;
+
   }
 
   p {
@@ -143,7 +144,6 @@ header.login {
   background: @bgColor;
 
   h1 {
-    color: #fff;
     margin: 0;
     padding: 0;
     font-size: 40px;

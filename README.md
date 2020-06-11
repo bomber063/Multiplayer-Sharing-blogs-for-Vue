@@ -2514,5 +2514,72 @@ static/css/app.14e1e30569593a52fd602c7559b6e65c.css.map     341 kB          [emi
 
 ```
 * 这次你打开Chrome浏览器控制台，查看首次进入主页页面后就不会加载其他路由页面的资源，**当改变其他路由的时候，会看到再次加载了其他路由对应页面的资源信息显示。**
+### 创建博客页面
+* 然Let's share链接到首页
+```html
+  <h1><router-link to="/" >Let's share</router-link></h1>
+```
+* 笔变成加号
+```html
+  <router-link to="/create" ><i class="edit el-icon-plus"></i></router-link>
+```
+* 是否展示到首页，用elementUI的[switch开关](https://element.eleme.cn/#/zh-CN/component/switch)
+```html
+<el-switch
+  v-model="atInex"
+  active-color="#13ce66"
+  inactive-color="#ff4949">
+</el-switch>
+```
+* elementUI中的input的[可自适应文本高度的文本域](https://element.eleme.cn/#/zh-CN/component/input#ke-zi-gua-ying-wen-ben-gao-du-de-wen-ben-yu)
+```html
+<el-input
+  type="textarea"
+  :autosize="{ minRows: 2, maxRows: 4}"
+  placeholder="请输入内容"
+  v-model="textarea2">
+</el-input>
+```
+* 用到多行文本[textarea](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/textarea)
+* 当点击确定的时候执行一个函数，就是创建一个博客。
+```html
+    <el-button @click="onCreate">确定</el-button>
+```
+* **限30个字。可以修改为0/30这样体验会比较好，，也就是每次内容的改变会做一个校验，校验结果超过了就增加一些特别的样式为红色警示效果。并提示用户已经超过了最大字数。这一步后续再做**
+* 因为这里创建的博客是自己单独组件使用的，所以不需要用Vuex共享数据。直接调用创建博客的函数即可。
+* 注意这里的实参和形参的参数的区别,另外注意[this.$message和Message](https://element.eleme.cn/#/zh-CN/component/message#dan-du-yin-yong)的区别,Element 为 Vue.prototype 添加了全局方法 $message。因此在 vue instance 中可以采用本页面中的方式调用 Message。如果使用Message需要单独引入`import { Message } from 'element-ui';`
+```js
+import blog from '@/api/blog'
+import {Message} from 'element-ui'
+
+export default {
+    data () {
+      return {
+        title:'',
+        description:'',
+        content:'',
+        atIndex:false
+      }
+    },
+    methods:{
+      onCreate(){
+        console.log(1)
+        blog.createBlog({ title: this.title, content: this.content, description: this.description, atIndex: this.atInex})//这里面的参数不能写成{ title = this.title, content = this.content, description = this.description, atIndex = this.atInex} = { title: this.title, content: this.content, description: this.description, atIndex: this.atInex},因为这里是是一个实参，应该是一个对象，传入形参的时候可以写结构赋值的方式
+        .then((res)=>{
+          console.log(2)
+          // this.$message.success(res.msg)
+          Message.success(res.msg)//或者可以直接写上面的this.$message，并且不用引用前面的import
+          this.$router.push({path:`/detail/${res.data.id}`})//成功后跳转到某个博客的详情页面，成功后获取到res就是后端传来的数据，这个数据里面的data的id里面包括了是博客的id。
+        })
+      }
+    }
+  }
+```
+* 这样我们每次增加博客点击确定后，跳转到的id每次都会增加，比如
+```js
+http://localhost:8080/#/detail/3905
+// 下一次就是
+http://localhost:8080/#/detail/3906
+```
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
