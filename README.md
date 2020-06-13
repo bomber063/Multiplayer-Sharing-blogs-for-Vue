@@ -2515,7 +2515,7 @@ static/css/app.14e1e30569593a52fd602c7559b6e65c.css.map     341 kB          [emi
 ```
 * 这次你打开Chrome浏览器控制台，查看首次进入主页页面后就不会加载其他路由页面的资源，**当改变其他路由的时候，会看到再次加载了其他路由对应页面的资源信息显示。**
 ### 创建博客页面
-* 然Let's share链接到首页
+* 让Let's share链接到首页
 ```html
   <h1><router-link to="/" >Let's share</router-link></h1>
 ```
@@ -2581,5 +2581,324 @@ http://localhost:8080/#/detail/3905
 // 下一次就是
 http://localhost:8080/#/detail/3906
 ```
+### 首页完善
+* 简单来说就是进入首页路由后，发一个请求获取到首页数据，然后对这个数据进行渲染。
+* 把首页的博客部分内容可以点击，点击后可以跳转到详情页面.
+* 并且这里需要一个v-for循环来遍历博客
+* 用到[Vue的列表渲染](https://cn.vuejs.org/v2/guide/list.html)，**这里的item in items和item of items 效果是一样的，这原生的for in和for of不一样**。具体见[列表渲染](https://cn.vuejs.org/v2/guide/list.html#%E7%94%A8-v-for-%E6%8A%8A%E4%B8%80%E4%B8%AA%E6%95%B0%E7%BB%84%E5%AF%B9%E5%BA%94%E4%B8%BA%E4%B8%80%E7%BB%84%E5%85%83%E7%B4%A0)
+* 根据后端的返回数据内容
+```js
+{
+  "status": "ok",
+  "msg": "获取成功",
+  "total": 200, //全部博客的总数
+  "page": 2, //当前页数
+  "totalPage": 10, // 总页数
+  "data": [
+    { 
+      "id": 1,                 //博客 id
+      "title": "博客标题",       
+      "description": "博客内容简要描述", 
+      "user": {
+        "id": 100, //博客所属用户 id,
+        "username": "博客所属用户 username",
+        "avatar": "头像"
+      },
+      "createdAt": "2018-12-27T08:22:56.792Z",   //创建时间
+      "updatedAt": "2018-12-27T08:22:56.792Z"  //更新时间
+    },
+    ...
+  ]
+}
+```
+* 修改前端的v-for循环的数据
+* js
+```js
+    data () {
+      return {
+        // msg: 'Welcome to Your Vue.js App'
+        blogs:[],//发请求获取到的数据复制给这个blogs
+        // blogId:1
+      }
+    },
+    created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
+      blog.getIndexBlogs()
+      .then((res)=>{
+        this.blogs=res.data
+        // this.blogId=res.data[1].id
+      })
+    },
+```
+* html
+```html
+  <div id="index">
+    <section class="blog-posts">
+      <!-- <router-link  v-for="blog in blogs" :key="blog.id" :to="`/detail/${blogId}`" class="item"> -->
+      <!-- 这里的错误的原因，第一是blogId写成了可blodId，手抖。第二个是blogs里面是一个数组，需要获取到某一个数组后才可以获取到数组的id，所以这里最好还是用for循环的blog来获取id比较合适 -->
+      <router-link  v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`" class="item">
+        <figure class="avatar">
+          <img :src="blog.user.avatar" :alt="blog.user.username">
+          <!-- 后端的用户名 -->
+          <figcaption>{{blog.user.username}}</figcaption> 
+        </figure>
+        <!-- 后端的文章标题和更新时间 -->
+        <h3>{{blog.title}} <span> {{blog.updatedAt}}</span></h3>
+         <!--后端数据的文章简介  -->
+        <p>{{blog.description}}</p>
+      </router-link>
+      </div> -->
+    </section>
+  </div>
+```
+#### 多页展示
+* 目前为止只能显示一页博客列表，不能显示全部内容，所以还需要设置分页组件，element-ui上面有
+* 这个时间显示方式还可以继续处理。
+* 当前页面发生变化时候用`@current-change`,具体见[elementUI分页的附加功能](https://element.eleme.cn/#/zh-CN/component/pagination#fu-jia-gong-neng),这里绑定事件的名字`@current-change="onPageChange"`，我又错写成了`@current-chang`，少了一个e，**错了第二次了**.
+* `:current-page`是当前页码高亮的数值。
+```html
+    <section class="pagination">
+        <el-pagination layout="prev, pager, next" :total="total" @current-change="onPageChange" :current-page="currentPage"></el-pagination>
+    </section>
+```
+* 刷新后还是保持在之前的页码对应的页面，这里需要把当前页面放到url里面。
+#### elementUI解决重复点击导航路由报错
+* 如果刷新之前是url的路径是`http://localhost:8080/#/?page=6`,然后刷新后点击了某个按钮之后路径又是重复的`http://localhost:8080/#/?page=6`，那么就会报出下面的错误。
+```sh
+Uncaught (in promise) Error: Avoided redundant navigation to current location: "/?page=89".
+    at HashHistory.confirmTransition (vue-router.esm.js?fe87:2185)
+    at HashHistory.transitionTo (vue-router.esm.js?fe87:2126)
+    at HashHistory.push (vue-router.esm.js?fe87:2585)
+    at eval (vue-router.esm.js?fe87:2903)
+    at new Promise (<anonymous>)
+    at VueRouter.push (vue-router.esm.js?fe87:2902)
+    at eval (template.js?e491:57)
+```
+* 通过[文章](https://blog.csdn.net/ZHOU_CXY/article/details/106565480)在Router的index.js文件里面加入这段代码就可以不报错了，当然这个错误不解决也不影响目前使用
+```js
+// // 解决重复点击导航路由报错
+const originalPush = Router.prototype.push;
+Router.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err);
+}
+```
+#### 刷新后保持当前页面数据及当前页码的高亮
+* 保持当前页面数据就是需要一个查询参数，也就是url上增加?。
+* 刷新后并且要保持当前分页的的某个页面的高亮，需要用到前面提到的`:current-page`.
+* 下面三种方式都可以实现**有点击分页的时候页码高亮并且在url上面也有某一个页码的查询参数显示，刷新后还是保持原来的高亮和查询参数**
+* [vue-router报错:Route with name ‘home’ does not exist](https://blog.csdn.net/weixin_41195867/article/details/88721162)，用name和params需要在路由router对象里面设置路由的name,还有动态路由路径，也就是`/index/:id`,我就是没有写name一直报错，一直没有写:id，所以获取不到params。
+##### 方法一：使用name和params配合但是不写query
+* 这里需要在router对象里面[设置name和路径参数](https://router.vuejs.org/zh/guide/essentials/dynamic-matching.html#%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1%E5%8C%B9%E9%85%8D)。
+* [Object.keys()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/keys) 方法会返回一个由一个给定对象的自身可枚举属性组成的数组，数组中属性名的排列顺序和正常循环遍历该对象时返回的顺序一致 。
+```js
+const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
+  routes: [ 
+    ...//省略
+    {
+      // name:"index",
+      path: '/',
+      component: () => import('@/pages/Index/template.vue')
+    },
+    {
+      name:"index",
+      path: '/?:a',
+      component: () => import('@/pages/Index/template.vue')
+    },
+    ...// 省略
+  ]
+})
+```
+* 使用name和params在Index目录的template.js文件中，这个方法相对来说**复杂和麻烦一点**
+```js
+import blog from '@/api/blog.js'
+
+export default {
+    data () {
+      return {
+        blogs:[],//发请求获取到的数据复制给这个blogs
+        total:1,//全部博客的总数
+        page:1,//当前页数
+        currentPage: 1,//这个是当前页码高亮
+        a:1//这个是路径参数
+      }
+    },
+    // 这里是刷新后的数据变化
+    created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
+      this.page=Object.keys(this.$route.query)[0]//这里我获取不到params,但是在onPageChange方法中是可以获取到params的。但是可以通过query获取到查询参数。
+        blog.getIndexBlogs({page:this.page})
+        .then((res)=>{
+          this.blogs=res.data
+          this.total=res.total//全部博客的总数
+          this.currentPage=res.page//这是elementUi的当前页面的高亮显示
+          let a=res.page
+          this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
+        })
+    },
+    methods:{
+      onPageChange(newPage){//这里是点击后的数据变化
+        this.page=newPage
+        blog.getIndexBlogs({ page: newPage})
+        .then((res)=>{
+          this.blogs=res.data
+          this.page=res.page//当前页数
+          // this.$router.push({path:'/',query:{page:newPage}})
+          // this.$router.push({path:`/?page=${newPage}`})
+          let a = newPage          
+          this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
+        })
+      }
+    }
+  }
+```
+##### 方法二：使用name和params配合，并且写query
+* 这里跟方法一**不同的地方在于，我们在router对象里面的路径参数增加`page=`**,因为这里的查询参数就是page
+```js
+const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
+  routes: [  
+    {
+      // name:"index",
+      path: '/',
+      component: () => import('@/pages/Index/template.vue')
+    },
+    {
+      name:"index",
+      path: '/?page=:a',//这里增加page=:a
+      component: () => import('@/pages/Index/template.vue')
+    }
+  ]
+})
+```
+* 这个时候使用name和params在Index目录的template.js文件中，这个方法相对来说**简单多了**
+```js
+import blog from '@/api/blog.js'
+
+export default {
+    data () {
+      return {
+        blogs:[],//发请求获取到的数据复制给这个blogs
+        total:1,//全部博客的总数
+        page:1,//当前页数
+        currentPage: 1
+      }
+    },
+    created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
+      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      this.page=this.$route.query.page||1
+        blog.getIndexBlogs({page:this.page})
+        .then((res)=>{
+          this.blogs=res.data
+          this.total=res.total//全部博客的总数
+          this.page=res.page//当前页数
+          this.currentPage=res.page//这是elementUi的当前页面的高亮显示
+        })
+    },
+    methods:{
+      onPageChange(newPage){
+        this.page=newPage
+        blog.getIndexBlogs({ page: newPage})
+        .then((res)=>{
+          this.blogs=res.data
+          // this.$router.push({path:'/',query:{page:newPage}})
+          // this.$router.push({path:`/?page=${newPage}`})
+          let a = newPage          
+          this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
+        })
+      }
+    }
+  }
+```
+##### 方法三：使用path和query配合
+* 这个方式就比较简单一点。他不需要name和路径参数配合,使用path和query在Index目录的template.js文件中
+```js
+import blog from '@/api/blog.js'
+
+export default {
+    data () {
+      return {
+        // msg: 'Welcome to Your Vue.js App'
+        blogs:[],//发请求获取到的数据复制给这个blogs
+        // blogId:1
+        total:1,//全部博客的总数
+        page:1,//当前页数
+        currentPage: 1
+      }
+    },
+    created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
+      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      this.page=this.$route.query.page||1
+      // this.page=Object.keys(this.$route.query)[0]//这里我获取不到params,但是可以通过query获取到查询参数。
+        blog.getIndexBlogs({page:this.page})
+        .then((res)=>{
+          this.blogs=res.data
+          this.total=res.total//全部博客的总数
+          this.currentPage=res.page//这是elementUi的当前页面的高亮显示
+          // let a=res.page
+          // this.$router.push({ name: 'index', params: { a }}) // -> /user/123
+        })
+    },
+    methods:{
+      onPageChange(newPage){
+        this.page=newPage
+        // this.currentPage=newPage
+        blog.getIndexBlogs({ page: newPage})
+        .then((res)=>{
+          this.blogs=res.data
+          this.$router.push({path:'/',query:{page:newPage}})
+          // this.$router.push({path:`/?page=${newPage}`})
+          // let a = newPage          
+          // this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
+        })
+      }
+    }
+  }
+```
+##### 方法四：单独使用path
+* 这个方法跟方法二很类似，只是在path里面把query直接在Index目录的template.js文件中写出来了
+```js
+import blog from '@/api/blog.js'
+
+export default {
+    data () {
+      return {
+        blogs:[],//发请求获取到的数据复制给这个blogs
+        // blogId:1
+        total:1,//全部博客的总数
+        page:1,//当前页数
+        currentPage: 1
+      }
+    },
+    created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
+      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      this.page=this.$route.query.page||1
+        blog.getIndexBlogs({page:this.page})
+        .then((res)=>{
+          this.blogs=res.data
+          // this.blogId=res.data[1].id
+          this.total=res.total//全部博客的总数
+          this.page=res.page//当前页数
+          this.currentPage=res.page//这是elementUi的当前页面的高亮显示
+          // let a=res.page
+          // this.$router.push({ name: 'index', params: { a }}) // -> /user/123
+        })
+    },
+    methods:{
+      onPageChange(newPage){
+        this.page=newPage
+        // this.currentPage=newPage
+        blog.getIndexBlogs({ page: newPage})
+        .then((res)=>{
+          this.blogs=res.data
+          // this.$router.push({path:'/',query:{page:newPage}})
+          this.$router.push({path:`/?page=${newPage}`})
+          // let a = newPage          
+          // this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
+        })
+      }
+    }
+  }
+```
+* [Vue Router 的params和query传参的使用和区别（详尽）](https://my.oschina.net/mf717714/blog/1932241)
+* [编程式的导航](https://router.vuejs.org/zh/guide/essentials/navigation.html)
+* [关于VUE项目中报Error: Avoided redundant navigation to current location: 的错](https://blog.csdn.net/ZHOU_CXY/article/details/106565480)
+
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)

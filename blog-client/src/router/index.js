@@ -14,6 +14,11 @@ import store from '../store'
 window.store=store
 Vue.use(Router)
 
+// 解决重复点击导航路由报错
+const originalPush = Router.prototype.push;
+Router.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err);
+}
 /*
 const router= new Router({//创建一个new Router对象，里面有对应的路由和组件还有元信息。
   routes: [
@@ -73,11 +78,18 @@ const router= new Router({//创建一个new Router对象，里面有对应的路
       meta:{requiresAuth:true}
     },    
     {
+      // name:"index",
       path: '/',
       component: () => import('@/pages/Index/template.vue')
     },
+    // {
+    //   name:"index",
+    //   path: '/?page=:a',
+    //   component: () => import('@/pages/Index/template.vue')
+    // },
     {
-      path: '/login',
+      // name:"index",
+      path: '/login/:userId',
       component: () => import('@/pages/Login/template.vue')  
     },
     {
