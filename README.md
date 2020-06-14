@@ -2921,7 +2921,7 @@ export default {
 }
 ```
 * [v-html](https://cn.vuejs.org/v2/guide/syntax.html#%E5%8E%9F%E5%A7%8B-HTML)
-#### 自己写的代码(没有markdown转换语法)
+#### 自己写的代码(没有markdown转换语法,用户头像跳转到用户页面也没有完善,用户名字也没有修改)
 * Detail目录下的template.js
 ```js
 import blog from '@/api/blog'
@@ -2929,7 +2929,6 @@ import blog from '@/api/blog'
 export default {
     data () {
       return {
-        // msg: 'Welcome to Your Vue.js App'
         title:'',
         content:'',
         updatedAt:'',
@@ -2952,9 +2951,6 @@ export default {
         console.log(res,'结果')
       })
     },
-    // methods:{
-
-    // }
   }
 ```
 * Detail目录下的template.vue
@@ -2979,15 +2975,97 @@ export default {
 
 <style src="./template.less" lang="less"></style>
 ```
-#### 老师的代码
+#### 完善详情页的老师的代码基础上修改
+* 转换markdown的依赖，安装[markded](https://www.npmjs.com/package/marked)
+```sh
+npm install marked
+```
+* 这里用了[v-html](https://cn.vuejs.org/v2/guide/syntax.html#%E5%8E%9F%E5%A7%8B-HTML)就可以不用在里面写`{{rawContent}}`,另外,因为有可能user（用户）不存在，所以需要判断一下，Detail目录下的template.vue
+```html
+<template>
+  <div id="detail">
+    <section class="user-info">
+      <!-- 这里的avatar,username,title,content,updatedAt都是该组件data里面的数据 -->
+      <!-- 有可能user不存在，所以需要判断一下 -->
+      <img :src="user?user.avatar:'用户信息不存在'" :alt="user?user.username:'用户信息不存在'" title="user?user.username:'用户信息不存在'" class="avatar">
+      <h3>{{title}}</h3>
+      <p><router-link :to="user?`/user/${user.id}`:'user'">{{user?user.username:'用户不存在'}}</router-link>发布于 {{createdAt}}</p>
+    </section>
+    <!-- 通过v-html是把字符串转换为html,这里面可以省掉{{rawContent}} -->
+    <section class="article" v-html="markdown">
+      <!-- {{rawContent}} -->
+    </section>
+  </div>
+</template>
+<script src="./template.js"></script>
+<style src="./template.less" lang="less"></style>
+```
 * Detail目录下的template.js
 ```js
+import blog from '@/api/blog'
+import marked from 'marked'
 
+export default {
+    data () {
+      return {
+        title:'',
+        rawContent:'',
+        user:{},
+        createdAt:''
+      }
+    },
+    created(){
+      this.blogId=this.$route.params.blogId//把传过来的路由路径赋值给blogId,这个是从路由router对象，也就是router目录下面index.js里面对应的路由的路径参数path: '/detail/:blogId'这里获取到的。
+      // console.log(this.$route.params.blogId,111)
+      blog.getDetail({ blogId:this.blogId })//然后通过发送获取博客详情请求
+      .then((res)=>{//通过后端返回的数据处理，这里是res作为实际参数
+        // console.log(res.data.user.avatar,123123123)
+        this.title=res.data.title
+        this.rawContent=res.data.content
+        this.createdAt=res.data.createdAt
+        this.user=res.data.user
+      })
+    },
+    computed:{
+      markdown(){
+        return marked(this.rawContent)
+      }
+    }
+  }
 ```
-* Detail目录下的template.vue
+#### 安装marked的问题
+* 我在根目录下安装marked然后通过下面引入没问题
 ```js
-
+import marked from 'marked'
+```
+* 但是我在blog-client目录安装markde通过下面引入就报错
+```js
+import marked from 'marked'
+```
+* 然后我通过修改引入路径就不报错了
+```js
+import marked from 'marked/lib/markde.js'
+```
+* 最后我又把**路径删除了，就不报错了，真奇怪**
+* Detail目录下的template.js
+```js
+import marked from 'marked'
 ```
 * 感觉老是的markdown在这里多此一举。好像不是多此一举，我需要在测试一下，在序号64页面。
+#### 发现一个用户信息(user)不存在导致的报错
+* 经过测试博客id为1337的user（用户）信息不存在。其实还有挺多用户信息的不存在的。不止这一个。可能是后端没有保存好吧.所以我这里先增加一些判断,用[三元运算](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Conditional_Operator)判断用户存在在执行下面的操作
+```html
+    <figure class="avatar">
+      <!-- <img :src="blog.user.avatar" :alt="blog.user.username"> -->
+      <!-- <figcaption>{{blog.user.username}}</figcaption>  -->
+      <!-- 因为后端返回的博客id为1337的user(用户)信息不存在为null，所以要判断 -->
+      <img :src="blog.user?blog.user.avatar:'用户不存在'" :alt="blog.user?blog.user.username:'用户不存在'">
+      <figcaption>{{blog.user?blog.user.username:'用户不存在'}}</figcaption> 
+    </figure>
+```
+* 页码79的一篇博客写的比较多，可以测试markdown和html语法。路径为
+```sh
+http://localhost:8080/#/detail/503
+```
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
