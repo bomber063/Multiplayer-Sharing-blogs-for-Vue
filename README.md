@@ -2654,7 +2654,7 @@ http://localhost:8080/#/detail/3906
 * 目前为止只能显示一页博客列表，不能显示全部内容，所以还需要设置分页组件，element-ui上面有
 * 这个时间显示方式还可以继续处理。
 * 当前页面发生变化时候用`@current-change`,具体见[elementUI分页的附加功能](https://element.eleme.cn/#/zh-CN/component/pagination#fu-jia-gong-neng),这里绑定事件的名字`@current-change="onPageChange"`，我又错写成了`@current-chang`，少了一个e，**错了第二次了**.
-* `:current-page`是当前页码高亮的数值。
+* `:current-page`是当前页码高亮的数值。**老师的代码这个地方没有完善**
 ```html
     <section class="pagination">
         <el-pagination layout="prev, pager, next" :total="total" @current-change="onPageChange" :current-page="currentPage"></el-pagination>
@@ -2683,8 +2683,8 @@ Router.prototype.push = function push(location) {
 ```
 #### 刷新后保持当前页面数据及当前页码的高亮
 * 保持当前页面数据就是需要一个查询参数，也就是url上增加?。
-* 刷新后并且要保持当前分页的的某个页面的高亮，需要用到前面提到的`:current-page`.
-* 下面三种方式都可以实现**有点击分页的时候页码高亮并且在url上面也有某一个页码的查询参数显示，刷新后还是保持原来的高亮和查询参数**
+* 刷新后并且要保持当前分页的的某个页面的高亮，需要用到前面提到的`:current-page`.**老师的代码这个地方没有完善**。
+* 下面四种方式都可以实现**有点击分页的时候页码高亮并且在url上面也有某一个页码的查询参数显示，刷新后还是保持原来的高亮和查询参数**
 * [vue-router报错:Route with name ‘home’ does not exist](https://blog.csdn.net/weixin_41195867/article/details/88721162)，用name和params需要在路由router对象里面设置路由的name,还有动态路由路径，也就是`/index/:id`,我就是没有写name一直报错，一直没有写:id，所以获取不到params。
 ##### 方法一：使用name和params配合但是不写query
 * 这里需要在router对象里面[设置name和路径参数](https://router.vuejs.org/zh/guide/essentials/dynamic-matching.html#%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1%E5%8C%B9%E9%85%8D)。
@@ -2852,7 +2852,7 @@ export default {
   }
 ```
 ##### 方法四：单独使用path
-* 这个方法跟方法二很类似，只是在path里面把query直接在Index目录的template.js文件中写出来了
+* 这个方法跟方法三很类似，只是在path里面把query直接在Index目录的template.js文件中写出来了
 ```js
 import blog from '@/api/blog.js'
 
@@ -2899,6 +2899,95 @@ export default {
 * [Vue Router 的params和query传参的使用和区别（详尽）](https://my.oschina.net/mf717714/blog/1932241)
 * [编程式的导航](https://router.vuejs.org/zh/guide/essentials/navigation.html)
 * [关于VUE项目中报Error: Avoided redundant navigation to current location: 的错](https://blog.csdn.net/ZHOU_CXY/article/details/106565480)
+### 完善详情页
+* 博客详情的后端返回信息
+```js
+{
+  "status": "ok",
+  "msg": "获取成功",
+  "data": { 
+      "id": 1,                 //博客 id
+      "title": "博客标题",       
+      "description": "博客内容简要描述", 
+      "content": "博客内容，字比较多",
+      "user": {
+        "id": 100, //博客所属用户 id,
+        "username": "博客所属用户 username",
+        "avatar": "头像"
+      },
+      "createdAt": "2018-12-27T08:22:56.792Z",   //创建时间
+      "updatedAt": "2018-12-27T08:22:56.792Z"  //更新时间
+    }
+}
+```
+* [v-html](https://cn.vuejs.org/v2/guide/syntax.html#%E5%8E%9F%E5%A7%8B-HTML)
+#### 自己写的代码(没有markdown转换语法)
+* Detail目录下的template.js
+```js
+import blog from '@/api/blog'
 
+export default {
+    data () {
+      return {
+        // msg: 'Welcome to Your Vue.js App'
+        title:'',
+        content:'',
+        updatedAt:'',
+        avatar:'',
+        username:'',
+        blogId:1
+      }
+    },
+    created(){
+      this.blogId=this.$route.params.blogId//把传过来的路由路径赋值给blogId,这个是从路由router对象，也就是router目录下面index.js里面对应的路由的路径参数path: '/detail/:blogId'这里获取到的。
+      console.log(this.$route.params.blogId,111)
+      blog.getDetail({ blogId:this.blogId })//然后通过发送获取博客详情请求
+      .then((res)=>{//通过后端返回的数据处理，这里是res作为实际参数
+        // console.log(res.data.user.avatar,123123123)
+        this.title=res.data.title
+        this.content=res.data.content
+        this.updatedAt=res.data.updatedAt
+        this.avatar=res.data.user.avatar
+        this.username=res.data.user.username
+        console.log(res,'结果')
+      })
+    },
+    // methods:{
+
+    // }
+  }
+```
+* Detail目录下的template.vue
+```js
+<template>
+  <div id="detail">
+    <section class="user-info">
+      <!-- 这里的avatar,username,title,content,updatedAt都是该组件data里面的数据 -->
+      <img :src="avatar" :alt="username" class="avatar">
+      <h3>{{title}}</h3>
+      <p><router-link to="/user">若愚</router-link> {{updatedAt}}</p>
+    </section>
+    <!-- 通过v-html是把字符串转换为html -->
+    <section class="article" v-html="content">
+      {{content}}
+    </section>
+
+  </div>
+</template>
+
+<script src="./template.js"></script>
+
+<style src="./template.less" lang="less"></style>
+```
+#### 老师的代码
+* Detail目录下的template.js
+```js
+
+```
+* Detail目录下的template.vue
+```js
+
+```
+* 感觉老是的markdown在这里多此一举。好像不是多此一举，我需要在测试一下，在序号64页面。
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
