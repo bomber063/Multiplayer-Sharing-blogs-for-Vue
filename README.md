@@ -3051,7 +3051,7 @@ import marked from 'marked/lib/markde.js'
 ```js
 import marked from 'marked'
 ```
-* 感觉老是的markdown在这里多此一举。好像不是多此一举，我需要在测试一下，在序号64页面。
+* markdown测试可以在序号64页面查看。
 #### 发现一个用户信息(user)不存在导致的报错
 * 经过测试博客id为1337的user（用户）信息不存在。其实还有挺多用户信息的不存在的。不止这一个。可能是后端没有保存好吧.所以我这里先增加一些判断,用[三元运算](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Conditional_Operator)判断用户存在在执行下面的操作
 ```html
@@ -3067,5 +3067,67 @@ import marked from 'marked'
 ```sh
 http://localhost:8080/#/detail/503
 ```
+#### 格式化时间
+* 在helpers目录里面创建一个常用的封装方法——util.js，比如格式化时间的方法。
+* [Date.prototype.getTime()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Date/getTime)方法返回一个时间的格林威治时间数值。也就是说该方法的返回值一个数值，表示从1970年1月1日0时0分0秒（UTC，即协调世界时）距离该日期对象所代表时间的毫秒数。
+* [Date.now()](https://developer.cdn.mozilla.net/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Date/now),该方法返回自 1970 年 1 月 1 日 00:00:00 (UTC) 到当前时间的毫秒数。
+* [switch](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/switch)将表达式的值与case子句匹配，并执行与该情况相关联的语句。
+* [Math.floor()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Math/floor) 返回小于或等于一个给定数字的最大整数。`Math.floor() === 向下取整`
+* [Vue插件](https://cn.vuejs.org/v2/guide/plugins.html#ad),
+  * [开发插件](https://cn.vuejs.org/v2/guide/plugins.html#%E5%BC%80%E5%8F%91%E6%8F%92%E4%BB%B6)——Vue.js 的插件应该暴露一个 install 方法。这个方法的第一个参数是 Vue 构造器，第二个参数是一个可选的选项对象.
+  * [使用插件](https://cn.vuejs.org/v2/guide/plugins.html#%E4%BD%BF%E7%94%A8%E6%8F%92%E4%BB%B6),通过全局方法 Vue.use() 使用插件。它需要在你调用 new Vue() 启动应用之前完成.
+  * 一个简单的Vue插件就是一个对象，这个对象里面有一个属性叫做install，它默认传递的参数第一个是Vue,第二个是options（主要是配置信息或者选项对象）
+* 格式件时间代码及开发插件代码util.js，这里是用到分钟，小时，天，月和年。
+```js
+function friendlyDate(datsStr) {
+    let dateObj = typeof datsStr === 'object' ? datsStr : new Date(datsStr)//如果是对象就是自己，如果不是对象就new一个对象
+    let time = dateObj.getTime()//方法的返回值一个数值，相对于设定的时间
+    let now = Date.now()//该方法返回自 1970 年 1 月 1 日 00:00:00 (UTC) 到当前时间的毫秒数。
+    let space = now - time//时间差
+    let str = ''
+  
+    switch (true) {//注意每一个case后面都有一个冒号
+      case space < 60000://1分钟内
+        str = '刚刚'
+        break
+      case space < 1000*3600://1个小时内
+        str = Math.floor(space/60000) + '分钟前'//Math.floor() === 向下取整
+        break
+      case space < 1000*3600*24://1天内
+        str = Math.floor(space/(1000*3600)) + '小时前'
+        break
+      case space < 1000*3600*24*30://1个月内
+        str = Math.floor(space/(1000*3600*24)) + '天前'
+        break
+      case space < 1000*3600*24*30*12://1年内
+        str = Math.floor(space/(1000*3600*24*30)) + '个月前'
+        break
+      default:
+        str = Math.floor(space/(1000*3600*24*30*12)) + '年前'
+    }
+    return str
+  }
+  
+  export default {//Vue简单的插件,开发插件
+    install(Vue, options) {
+      Vue.prototype.friendlyDate = friendlyDate
+    }
+  }
+```
+* 在main.js里面使用插件，在写下下面的使用插件后，会调用helpers里面的util.js的install里面的方法，最终做的事情就是`Vue.prototype.friendlyDate = friendlyDate`,就是把friendlyDate这个函数变成Vue原型上面的一个属性（这个属性也叫作friendlyDate），**也就是每一个Vue实例都有一个friendlyDate这个方法**。
+```js
+import Util from '@/helpers/util'
+
+Vue.use(Util)
+```
+* 最后我们就可以在Detail目录下面的tamplate.vue里面增加一句代码`{{friendlyDate(createdAt)}}`,就可以实现格式化这个时间啦。当然处理这里其他模板里面或者Vue实例里面都是可以使用friendlyDate这个方法的。
+```html
+    <p><router-link :to="user?`/user/${user.id}`:'user'">{{user?user.username:'用户不存在'}}</router-link>发布于 {{friendlyDate(createdAt)}}</p>
+```
+* 同样我们还可以在首页Index目录的template.vue里面增加`{{friendlyDate(blog.updatedAt)}}`
+```html
+  <h3>{{blog.title}} <span> {{friendlyDate(blog.updatedAt)}}</span></h3> 
+```
+* 如果后续还有其他的一些专门用于辅助处理的方法都可以放到util.js这个文件里面。
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)

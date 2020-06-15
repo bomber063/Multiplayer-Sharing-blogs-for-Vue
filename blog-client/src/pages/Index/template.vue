@@ -11,7 +11,7 @@
           <img :src="blog.user?blog.user.avatar:'用户不存在'" :alt="blog.user?blog.user.username:'用户不存在'">
           <figcaption>{{blog.user?blog.user.username:'用户不存在'}}</figcaption> 
         </figure>
-        <h3>{{blog.title}} <span> {{blog.updatedAt}}</span></h3> 
+        <h3>{{blog.title}} <span> {{friendlyDate(blog.updatedAt)}}</span></h3> 
         <p>{{blog.description}}</p>
       </router-link>
       <!-- <div class="item">

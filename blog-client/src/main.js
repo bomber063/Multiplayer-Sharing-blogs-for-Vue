@@ -6,10 +6,13 @@ import router from './router'
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import store from './store/'//如果这里没有index.js那么默认也就是index.js
+import Util from '@/helpers/util'
 
 Vue.use(ElementUI);
 
 Vue.config.productionTip = false
+
+Vue.use(Util)
 
 /* eslint-disable no-new */
 new Vue({
