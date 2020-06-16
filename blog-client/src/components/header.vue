@@ -102,6 +102,7 @@
         //  this.$store.commit('setLogin',{isLogin:false})//如果注销了，就把是否登陆状态修改为最开始的false状态
           // this.$store.state.auth.isLogin=false
           // location.reload()
+          this.$router.push({path:'/'})
         }
       }
     }

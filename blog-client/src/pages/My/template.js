@@ -9,12 +9,13 @@ export default {
           page:1,
           total:1,
           currentPage: 1,
-          blogId:1,
+          blogId:1
         }
       },
       computed:{//所以后面需要用到的user的都从这里来获取
         ...mapGetters([
-          'user'
+          'user',
+          'isLogin'
         ])
       },
       created(){

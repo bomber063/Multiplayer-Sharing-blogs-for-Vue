@@ -1,8 +1,8 @@
 <template>
   <div id="user" >
     <section class="user-info">
-      <img :src="user.avatar" :alt="user.username" class="avatar">
-      <h3>{{user.username}}</h3>
+      <img :src="user&&user.avatar" :alt="user&&user.username" class="avatar">
+      <h3>{{user&&user.username}}</h3>
     </section>
     <section>
       <router-link class="item" v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`">

@@ -3250,7 +3250,7 @@ http://localhost:8080/#/user/144?page=1
       meta:{requiresAuth:true}
     },    
 ```
-* 通过mapGetter映射user信息，**用户信息从user里面获取，不需要从路由的id里面去获取了并且分页点击的时候不需要user.id这个路由了**
+* 通过mapGetter映射user信息，**用户信息从user里面获取，不需要从路由的id里面去获取了，并且分页点击的时候不需要user.id这个路由了，只需要一个`/my`路由**
 ```js
       this.$router.push({path:'/my',query:{page:newPage}})
       ...
@@ -3258,7 +3258,7 @@ http://localhost:8080/#/user/144?page=1
 ```
 * 完整的my目录下面的template.js代码为
 
-### 一个路由目录错误
+#### 一个路由目录错误
 * 在组件header.vue中路由原来错误的写成了
 ```html
     <router-link to="./login"><el-button>立即登录</el-button></router-link>
@@ -3342,7 +3342,7 @@ http://localhost:8080/#/login
         },
     ```
 * 删除之后还需要把DOM删除掉，不然如果不刷新页面，删除的博客还可以看到。
-* 可以通过过滤函数[Array.prototype.filter()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)，这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。也就是不相同的都留下来，相同的就是已经删除掉的博客。
+* 可以通过过滤函数[Array.prototype.filter()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)，这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。**也就是不相同的都留下来，相同的就是已经删除掉的博客。**
 ```js
   // 这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。也就是不相同的都留下来，相同的就是已经删除掉的博客。
   this.blogs=this.blogs.filter((blog)=>{return blog.id!==blogId})
@@ -3482,6 +3482,54 @@ export default {
       }
   }
 ```
+#### 修复一个我的(my)页面注销后头像还存在并报错的bug
+#### 最主要的方式,注销后直接跳转到主页
+* 最主要的方式最好在components目录的header.vue组件里面在注销后直接跳转到主页
+```js
+    onLogout(){
+      this.logout()
+      this.$router.push({path:'/'})
+    }
+```
+#### 辅助方式
+##### 辅助方式1，使用v-if判断isLogin是否为true
+* 就是在登陆后进入我的页面后点击注销，这时候我的(my)页面注销后头像还存在，**应该是不存在的状态**，所以我们要在注销后销毁这个头像跟这个名字。
+* 可以通过Vuex里面的isLogin属性，当登陆的时候就是true，不登录状态就是false，刚好跟Vue里面的[v-if](https://cn.vuejs.org/v2/guide/conditional.html#v-if)配合。
+* 在My目录下面的template.vue文件的第一个section增加`v-if="isLogin"`
+```html
+    <section class="user-info" v-if="isLogin">
+      <img :src="user.avatar" :alt="user.username" class="avatar">
+      <h3>{{user.username}}</h3>
+    </section>
+```
+* 因为在store目录下面的auth.js里面报错了isLogin的数据信息
+```js
+const state={//类似于组件里面的data属性
+    user:null,//用户信息
+    isLogin:false//是否登录
+}
+const getters={//类似于组件里面的computed属性
+    user:state=>state.user,
+    isLogin:state=>state.isLogin
+}
+```
+* 所以在My目录下面的template.js里面引入Vuex里面的isLogin
+```js
+      computed:{//所以后面需要用到的user的都从这里来获取
+        ...mapGetters([
+          'user',
+          'isLogin'
+        ])
+      },
+```
+##### 辅助方式2，判断user是否存在在执行后面的代码
+* 在My目录下面的template.vue里面
+```html
+    <section class="user-info">
+      <img :src="user&&user.avatar" :alt="user&&user.username" class="avatar">
+      <h3>{{user&&user.username}}</h3>
+    </section>
+```
+* **上面的三个方法我全都做了**
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
-* 我的(my)页面注销后头像还存在，**应该是不存在的状态**
