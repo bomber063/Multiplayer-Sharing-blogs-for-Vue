@@ -12,8 +12,8 @@ export default {
     },
     methods:{
       onCreate(){
-        console.log(1)
-        blog.createBlog({ title: this.title, content: this.content, description: this.description, atIndex: this.atInex})//这里面的参数不能写成{ title = this.title, content = this.content, description = this.description, atIndex = this.atInex} = { title: this.title, content: this.content, description: this.description, atIndex: this.atInex},因为这里是是一个实参，应该是一个对象，传入形参的时候可以写结构赋值的方式
+        console.log(1,this.atIndex)
+        blog.createBlog({ title: this.title, content: this.content, description: this.description, atIndex: this.atIndex})//这里面的参数不能写成{ title = this.title, content = this.content, description = this.description, atIndex = this.atInex} = { title: this.title, content: this.content, description: this.description, atIndex: this.atInex},因为这里是是一个实参，应该是一个对象，传入形参的时候可以写结构赋值的方式
         .then((res)=>{
           console.log(2)
           // this.$message.success(res.msg)

@@ -7,9 +7,9 @@
     <section>
       <router-link class="item" v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`">
         <div class="date">
-          <span class="day">{{splitDate(blog.user.createdAt).date}}</span>
-          <span class="month">{{splitDate(blog.user.createdAt).month}}月</span>
-          <span class="year">{{splitDate(blog.user.createdAt).year}}</span>
+          <span class="day">{{splitDate(blog.createdAt).date}}</span>
+          <span class="month">{{splitDate(blog.createdAt).month}}月</span>
+          <span class="year">{{splitDate(blog.createdAt).year}}</span>
         </div>
         <h3>{{blog.title}}</h3>
         <p>{{blog.description}}</p>
