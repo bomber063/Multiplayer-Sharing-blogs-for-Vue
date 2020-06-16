@@ -25,7 +25,7 @@ export default {
       // console.log(this.cpage,123)
       // console.log(this.$route.query,123)
       // console.log(this.$route.matched,111111111111111111111)
-      this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数,因为老师的代码是把page当做currentPage使用的，currentPage是不能是字符串。而我的代码是单独有使用currentPage这个变量，因为这里获取到的是字符串，要通过parseInt转换为数字
       // this.page=this.$route.query.page||1
       // console.log(this.$route.query)
       // console.log(this.$route.params,123123123)

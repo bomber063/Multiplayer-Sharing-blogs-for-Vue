@@ -2781,7 +2781,7 @@ export default {
       }
     },
     created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
-      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数。因为老师的代码是把page当做currentPage使用的，currentPage是不能是字符串。而我的代码是单独有使用currentPage这个变量，因为这里获取到的是字符串，要通过parseInt转换为数字
       this.page=this.$route.query.page||1
         blog.getIndexBlogs({page:this.page})
         .then((res)=>{
@@ -2823,7 +2823,7 @@ export default {
       }
     },
     created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
-      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数，因为老师的代码是把page当做currentPage使用的，currentPage是不能是字符串。而我的代码是单独有使用currentPage这个变量，因为这里获取到的是字符串，要通过parseInt转换为数字
       this.page=this.$route.query.page||1
       // this.page=Object.keys(this.$route.query)[0]//这里我获取不到params,但是可以通过query获取到查询参数。
         blog.getIndexBlogs({page:this.page})
@@ -2867,7 +2867,7 @@ export default {
       }
     },
     created(){//created阶段，此刻模板还没有渲染，但是数据已经完成，那么就可以获取数据放到data里面，这是最早的数据可用阶段。
-      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数
+      // this.page=parseInt(this.$route.query.page)||1//当前page页首先从url里面的查询参数query去找，找不到就为page是1，另外这里的字符串可以不用转换为数字也可以，就是下面的不用parseInt函数，因为老师的代码是把page当做currentPage使用的，currentPage是不能是字符串。而我的代码是单独有使用currentPage这个变量，因为这里获取到的是字符串，要通过parseInt转换为数字
       this.page=this.$route.query.page||1
         blog.getIndexBlogs({page:this.page})
         .then((res)=>{
@@ -3159,9 +3159,9 @@ Vue.use(Util)
     <section>
       <router-link class="item" v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`">
         <div class="date">
-          <span class="day">{{splitDate(blog.user.createdAt).date}}</span>
-          <span class="month">{{splitDate(blog.user.createdAt).month}}月</span>
-          <span class="year">{{splitDate(blog.user.createdAt).year}}</span>
+          <span class="day">{{splitDate(blog.createdAt).date}}</span>
+          <span class="month">{{splitDate(blog.createdAt).month}}月</span>
+          <span class="year">{{splitDate(blog.createdAt).year}}</span>
         </div>
         <h3>{{blog.title}}</h3>
         <p>{{blog.description}}</p>
@@ -3190,7 +3190,7 @@ export default {
       }
     },
       created(){
-        this.page=this.$route.query.page||1//这句话不写也不影响
+        this.page=this.$route.query.page||1
         blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
         .then((res)=>{
           this.blogs=res.data
@@ -3227,10 +3227,261 @@ export default {
 ```sh
 http://localhost:8080/#/user/144?page=1
 ```
-* 我的(my)页面注销后头像还存在，**应该是不存在的状态**
-* **老师用的是typeof，我用的是instanceof**
-* **老师的代码还存在刷新后高亮页码不保存在原来的页码的问题**。
+* **老师用的是[typeof](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/typeof)，我用的是[instanceof](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/instanceof)**
+* **老师的代码还存在刷新后高亮页码不保存在原来的页码的问题**,主要是缺少elementUI的`current-change`属性。**不过后面增加了**
 * **老师用的是userId，我用的是user.id**
-### 
+### 我的(my)页面
+* 我的页面跟用户页面比较类似，**区别是**
+  * 我的页面(my)多了一个头像和名字。
+  * 我的页面(my)每篇博客多了编辑和删除按钮。
+  * 用户(user)页面的路由上面有一个userId。不用登陆。
+  * 我的(my)页面的路由是没有id的。他是我个人登陆者的信息。
+* 用到Vue的[事件修饰符](https://cn.vuejs.org/v2/guide/events.html#%E4%BA%8B%E4%BB%B6%E4%BF%AE%E9%A5%B0%E7%AC%A6)
+* [vue中修饰符prevent相当于调用event.preventDefault()](https://blog.csdn.net/yang1393214887/article/details/104340630),vue中prevent修饰符相当于调用[event.preventDefault()](https://developer.mozilla.org/zh-CN/docs/Web/API/Event/preventDefault)：event.preventDefault() 方法阻止元素发生默认的行为。比如：
+  * 当点击提交按钮时阻止对表单的提交
+  * 阻止以下 URL 的链接
+  * 阻止a链接跳转
+* [关于vue的.once .prevent .keycode修饰符们](https://blog.csdn.net/Tina_xubin/article/details/87649680)
+* 因为在my这个路由下面肯定是登陆状态，因为不是登陆状态会默认跳转到需要你登陆的路由,这里有一个路由元信息meta.**这时候就可以去状态管理工具Vuex里面去获取用户的信息**。
+```js
+    {
+      path: '/my',
+      component: () => import('@/pages/My/template.vue'),
+      meta:{requiresAuth:true}
+    },    
+```
+* 通过mapGetter映射user信息，**用户信息从user里面获取，不需要从路由的id里面去获取了并且分页点击的时候不需要user.id这个路由了**
+```js
+      this.$router.push({path:'/my',query:{page:newPage}})
+      ...
+      blog.getBlogsByUserId(this.user.id,{page:this.page})
+```
+* 完整的my目录下面的template.js代码为
+
+### 一个路由目录错误
+* 在组件header.vue中路由原来错误的写成了
+```html
+    <router-link to="./login"><el-button>立即登录</el-button></router-link>
+    <router-link to="./register"><el-button>注册账号</el-button></router-link>
+```
+* 这样在点击立即登陆或者注册账号的时候会从当前目录在增加一个路由,也就是说如果当前路由是
+```sh
+http://localhost:8080/#/detail
+```
+* 那么点击后会变成
+```sh
+http://localhost:8080/#/detail/login
+```
+* 但是我们是需要的是如下的路由
+```sh
+http://localhost:8080/#/login
+```
+* **所以这里要修改为不要当前目录，而是根目录下的的路由设置**
+```html
+    <router-link to="/login"><el-button>立即登录</el-button></router-link>
+    <router-link to="/register"><el-button>注册账号</el-button></router-link>
+```
+* **老师在这里终于想起来增加`:current-page`字段来显示页码高亮了**。
+#### 删除某个博客功能
+* 我们可以把需要删除的博客的id在HTML标签中传入
+*  删除的blog.id这个参数可以直接传入到函数onDelete里面去，如果不写那默认的参数是当前的事件
+```html
+      <!-- 因为是a链接，所以使用prevent阻止a链接的默认事件跳转 -->
+      <!-- 删除的blog.id这个参数可以直接传入到函数onDelete里面去，如果不写那默认的参数是当前的事件 -->
+      <a href="#" @click.prevent="onDelete(blog.id)">删除</a>
+```
+#### 把onDelete异步.then的函数转换为async await类似同步函数
+* 把onDelete异步.then的函数转换为[async await](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/await)函数,这里还用到了这里用到了elementUi的[MessageBox 弹框组件](https://element.eleme.cn/#/zh-CN/component/message-box)
+  * 异步的.then的onDelete函数
+    ```js
+        onDelete(blogId){
+            this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              return blog.deleteBlog({ blogId})//老师这里前面加一个return不知道有什么用处。
+              .then((res)=>{
+                  this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                  });
+              })
+            }).catch(() => {
+              this.$message({
+                type: 'info',
+                message: '已取消删除'
+              });          
+            });
+        },
+    ```
+  * 转换为async await的onDelete函数
+    ```js
+        // 把上面的异步改成async try catch的类同步的样式
+        async onDelete(blogId){
+          try {
+            await this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            await blog.deleteBlog({ blogId})
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            });
+          }
+          catch (e) {
+              this.$message({
+                type: 'info',
+                message: '已取消删除'
+              });          
+            };
+            // 这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。
+          this.blogs=this.blogs.filter((blog)=>{return blog.id!==blogId})
+        },
+    ```
+* 删除之后还需要把DOM删除掉，不然如果不刷新页面，删除的博客还可以看到。
+* 可以通过过滤函数[Array.prototype.filter()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)，这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。也就是不相同的都留下来，相同的就是已经删除掉的博客。
+```js
+  // 这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。也就是不相同的都留下来，相同的就是已经删除掉的博客。
+  this.blogs=this.blogs.filter((blog)=>{return blog.id!==blogId})
+```
+#### 最后我的页面(my)的完整代码
+* 最后的my目录里面template.vue代码为
+```html
+<template>
+  <div id="user" >
+    <section class="user-info">
+      <img :src="user.avatar" :alt="user.username" class="avatar">
+      <h3>{{user.username}}</h3>
+    </section>
+    <section>
+      <router-link class="item" v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`">
+        <div class="date">
+          <span class="day">{{splitDate(blog.createdAt).date}}</span>
+          <span class="month">{{splitDate(blog.createdAt).month}}月</span>
+          <span class="year">{{splitDate(blog.createdAt).year}}</span>
+        </div>
+        <h3>{{blog.title}}</h3>
+        <p>{{blog.description}}</p>
+        <div class="actions">
+          <!-- 编辑路由需要展示对应的blogId -->
+          <router-link :to="`/edit/${blog.id}`">编辑</router-link>
+          <!-- 因为是a链接，所以使用prevent阻止a链接的默认事件跳转 -->
+          <!-- 删除的blog.id这个参数可以直接传入到函数onDelete里面去，如果不写那默认的参数是当前的事件 -->
+          <a href="#" @click.prevent="onDelete(blog.id)">删除</a>
+        </div>
+      </router-link>
+    </section>
+    <section class="pagination">
+        <el-pagination layout="prev, pager, next" :total="total" @current-change="onPageChange" :current-page="currentPage"></el-pagination>
+    </section>
+  </div>
+</template>
+
+<script src="./template.js"></script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style lang="less" src="../My/template.less"></style>
+```
+* 最后的my目录里面template.js代码为
+```js
+import blog from '@/api/blog'
+import {mapGetters} from 'vuex'
+
+export default {
+      data () {
+        return {
+          blogs:[],
+          // user:{},
+          page:1,
+          total:1,
+          currentPage: 1,
+          blogId:1,
+        }
+      },
+      computed:{//所以后面需要用到的user的都从这里来获取
+        ...mapGetters([
+          'user'
+        ])
+      },
+      created(){
+        this.page=parseInt(this.$route.query.page)||1//因为老师的代码是把page当做currentPage使用的，currentPage是不能是字符串。而我的代码是单独有使用currentPage这个变量,因为这里获取到的是字符串，要通过parseInt转换为数字
+        // blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
+        blog.getBlogsByUserId(this.user.id,{page:this.page})
+        .then((res)=>{
+          this.blogs=res.data
+          this.page=res.page
+          this.total=res.total
+          this.currentPage=res.page//这是elementUi的当前页面的高亮显示
+            console.log(res)
+        })
+      },
+      methods:{
+        splitDate(dataStr){
+          let dataObj=dataStr instanceof Object ? dataStr : new Date (dataStr)//这里是new后面是Date对象,通过三元运算把传过来的参数设置为Data对象
+          // let dateObj = typeof dataStr === 'object' ? dataStr : new Date(dataStr)
+          return {
+            date:dataObj.getDate(),
+            month:dataObj.getMonth()+1,//这里加1是因为0才是1月，1是2月
+            year:dataObj.getFullYear(),
+          }
+        },
+        // onDelete(blogId){
+        //     this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        //       confirmButtonText: '确定',
+        //       cancelButtonText: '取消',
+        //       type: 'warning'
+        //     }).then(() => {
+        //       return blog.deleteBlog({ blogId})//老师这里前面加一个return不知道有什么用处。
+        //       .then((res)=>{
+        //           this.$message({
+        //             type: 'success',
+        //             message: '删除成功!'
+        //           });
+        //       })
+        //     }).catch(() => {
+        //       this.$message({
+        //         type: 'info',
+        //         message: '已取消删除'
+        //       });          
+        //     });
+        // },
+        // 把上面的异步改成async try catch的类同步的样式
+        async onDelete(blogId){//这里用到了elementUi的MessageBox 弹框组件
+          try {
+            await this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            })
+            await blog.deleteBlog({ blogId})
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            });
+          }
+          catch (e) {
+              this.$message({
+                type: 'info',
+                message: '已取消删除'
+              });          
+            };
+            // 这里把DOM重新筛选一下，删除的那个blogId跟除了它自己以外的其他的blog.id都不相同。
+          this.blogs=this.blogs.filter((blog)=>{return blog.id!==blogId})
+        },
+        onPageChange(newPage){
+          this.page=newPage
+          blog.getBlogsByUserId(this.user.id,{page:this.page})
+          .then((res)=>{
+            this.blogs=res.data
+            this.$router.push({path:'/my',query:{page:newPage}})
+          })
+        }
+      }
+  }
+```
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
+* 我的(my)页面注销后头像还存在，**应该是不存在的状态**

@@ -12,7 +12,7 @@ export default {
     },
       created(){
         // console.log(this.$route.params.userId)
-        this.page=this.$route.query.page||1//这句话不写也不影响
+        this.page=this.$route.query.page||1
         blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
         .then((res)=>{
           this.blogs=res.data
