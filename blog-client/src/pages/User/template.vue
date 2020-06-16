@@ -1,10 +1,31 @@
 <template>
-  <div id="user">
-    用户页面
+  <div id="user" >
+    <section class="user-info">
+      <img :src="user.avatar" :alt="user.username" class="avatar">
+      <h3>{{user.username}}</h3>
+    </section>
+    <section>
+      <router-link class="item" v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`">
+        <div class="date">
+          <span class="day">{{splitDate(blog.user.createdAt).date}}</span>
+          <span class="month">{{splitDate(blog.user.createdAt).month}}月</span>
+          <span class="year">{{splitDate(blog.user.createdAt).year}}</span>
+        </div>
+        <h3>{{blog.title}}</h3>
+        <p>{{blog.description}}</p>
+        <!-- <div class="actions">
+          <router-link to="/edit">编辑</router-link>
+          <a href="#">删除</a>
+        </div> -->
+      </router-link>
+    </section>
+    <section class="pagination">
+        <el-pagination layout="prev, pager, next" :total="total" @current-change="onPageChange" :current-page="currentPage"></el-pagination>
+    </section>
   </div>
 </template>
 
 <script src="./template.js"></script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style src="./template.css"></style>
+<style lang="less" src="../My/template.less"></style>

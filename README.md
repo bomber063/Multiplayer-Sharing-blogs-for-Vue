@@ -1603,7 +1603,7 @@ actions: {
   }
 }
 ```
-##### 在组装件中同样有mapActions
+##### 在组件中同样有mapActions
 * mapActions 辅助函数将组件的 methods **映射为 store.dispatch**调用（需要先在根节点注入 store）
 #### Vuex映射在不同位置
 * **state和getters是放到组件的computed里面，而mutations和actions是放到组件的methods里面**。
@@ -3129,5 +3129,108 @@ Vue.use(Util)
   <h3>{{blog.title}} <span> {{friendlyDate(blog.updatedAt)}}</span></h3> 
 ```
 * 如果后续还有其他的一些专门用于辅助处理的方法都可以放到util.js这个文件里面。
+### user个人页面完善
+#### 自己犯的错误，对于函数第一个参数居然都看花了
+* **下面函数的第一个形参数是必须要传入的**，如果不传入可能会报错，**代码一多，我自己都看花了，第一个参数就是参数本身，第二个参数才是一个对象。**
+```js
+  getBlogsByUserId(userId, { page=1, atIndex } = { page: 1}) {//获取某个用户的博客列表，也是第一种函数换一种写法。
+    return this.getBlogs({ userId, page, atIndex })
+  },
+```
+#### 用到的API及代码说明
+* 用[v-for](https://cn.vuejs.org/v2/guide/list.html#%E5%9C%A8%E7%BB%84%E4%BB%B6%E4%B8%8A%E4%BD%BF%E7%94%A8-v-for)的时候，给key上面绑定唯一的一个值，这个后续Vue本身对这些元素进行操作的时候，可以更容易定位到某个元素。操作起来效率更高一些。
+```html
+      <router-link class="item" v-for="blog in blogs" :key="blog.id">
+        <div class="date">
+```
+* 获取日期三个API
+  * [Date.prototype.getMonth()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth),根据本地时间，返回一个指定的日期对象的月份，为基于0的值（0表示一年中的第一月）。
+  * [Date.prototype.getDate()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Date/getDate),根据本地时间，返回一个指定的日期对象为一个月中的哪一日（从1--31）
+  * [Date.prototype.getFullYear()](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Date/getFullYear),方法根据本地时间返回指定日期的年份
+* 增加分页，跟首页index的分页是类似的。
+* template.vue代码
+```html
+<template>
+  <div id="user" >
+    <section class="user-info">
+      <img :src="user.avatar" :alt="user.username" class="avatar">
+      <h3>{{user.username}}</h3>
+    </section>
+    <section>
+      <router-link class="item" v-for="blog in blogs" :key="blog.id" :to="`/detail/${blog.id}`">
+        <div class="date">
+          <span class="day">{{splitDate(blog.user.createdAt).date}}</span>
+          <span class="month">{{splitDate(blog.user.createdAt).month}}月</span>
+          <span class="year">{{splitDate(blog.user.createdAt).year}}</span>
+        </div>
+        <h3>{{blog.title}}</h3>
+        <p>{{blog.description}}</p>
+      </router-link>
+    </section>
+    <section class="pagination">
+        <el-pagination layout="prev, pager, next" :total="total" @current-change="onPageChange" :current-page="currentPage"></el-pagination>
+    </section>
+  </div>
+</template>
+<script src="./template.js"></script>
+<style lang="less" src="../My/template.less"></style>
+```
+* template.js代码
+```js
+import blog from '@/api/blog'
+
+export default {
+    data () {
+      return {
+        blogs:[],
+        user:{},
+        page:1,
+        total:1,
+        currentPage: 1
+      }
+    },
+      created(){
+        this.page=this.$route.query.page||1//这句话不写也不影响
+        blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
+        .then((res)=>{
+          this.blogs=res.data
+          this.page=res.page
+          this.total=res.total
+          this.currentPage=res.page//这是elementUi的当前页面的高亮显示
+          if( res.data.length>0){//先判断返回的数据里面存在data
+            this.user=res.data[0].user//因为data里面的用户user信息是一样的，所以随便获取一个即可，这里取第一个[0]
+          }
+        })
+      },
+      methods:{
+        splitDate(dataStr){
+          let dataObj=dataStr instanceof Object ? dataStr : new Date (dataStr)//这里是new后面是Date对象,通过三元运算把传过来的参数设置为Data对象
+          // let dateObj = typeof dataStr === 'object' ? dataStr : new Date(dataStr)
+          return {
+            date:dataObj.getDate(),
+            month:dataObj.getMonth()+1,//这里加1是因为0才是1月，1是2月
+            year:dataObj.getFullYear(),
+          }
+        },
+        onPageChange(newPage){
+          this.page=newPage
+          blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
+          .then((res)=>{
+            this.blogs=res.data
+            this.$router.push({path:`/user/${this.user.id}`,query:{page:newPage}})
+          })
+        }
+      }
+  }
+```
+* 测试网址
+```sh
+http://localhost:8080/#/user/144?page=1
+```
+* 我的(my)页面注销后头像还存在，**应该是不存在的状态**
+* **老师用的是typeof，我用的是instanceof**
+* **老师的代码还存在刷新后高亮页码不保存在原来的页码的问题**。
+* **老师用的是userId，我用的是user.id**
+### 
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)

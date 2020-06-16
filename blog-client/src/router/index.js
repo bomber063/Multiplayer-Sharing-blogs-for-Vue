@@ -89,7 +89,7 @@ const router= new Router({//创建一个new Router对象，里面有对应的路
     // },
     {
       // name:"index",
-      path: '/login/:userId',
+      path: '/login',
       component: () => import('@/pages/Login/template.vue')  
     },
     {
