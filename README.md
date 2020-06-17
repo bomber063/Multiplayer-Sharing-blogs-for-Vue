@@ -3484,7 +3484,7 @@ export default {
 ```
 #### 修复一个我的(my)页面注销后头像还存在并报错的bug
 #### 最主要的方式,注销后直接跳转到主页
-* 最主要的方式最好在components目录的header.vue组件里面在注销后直接跳转到主页
+* **最主要的方式**最好在components目录的header.vue组件里面在注销后直接跳转到主页
 ```js
     onLogout(){
       this.logout()
@@ -3531,5 +3531,73 @@ const getters={//类似于组件里面的computed属性
     </section>
 ```
 * **上面的三个方法我全都做了**
+### 完善edit编辑页面
+* 和create页面信息很像，但是——当点击编辑后进入到编辑页面，应该已经获取到标题，内容，描述等信息，**而不是和create创建的路由一样是空的信息**。所以需要先获取到博客信息，然后把博客里面响应的信息赋值给对应的数据。
+* v-model里面对应的信息和data里面的数据是相对应的。
+* 具体代码,在Edit目录的template.js里面
+```js
+import blog from '@/api/blog'
+import {Message} from 'element-ui'
+
+export default {
+    data () {
+      return {
+        title:'',
+        description:'',
+        content:'',
+        atIndex:false,
+        blogId:1
+      }
+    },
+    created(){
+      this.blogId=this.$route.params.blogId
+      blog.getDetail({ blogId:this.blogId })
+      .then((res)=>{
+        this.title=res.data.title
+        this.description=res.data.description
+        this.content=res.data.content
+        this.atIndex=res.data.atIndex
+      })
+    },
+    methods:{
+      onEdit(){
+      blog.updateBlog({ blogId:this.blogId },{ title:this.title, content:this.content, description:this.description, atIndex:this.atIndex })
+        .then((res)=>{
+          console.log(2)
+          // this.$message.success(res.msg)
+          Message.success(res.msg)//或者可以直接写上面的this.$message，并且不用引用前面的import
+          this.$router.push({path:`/detail/${res.data.id}`})//成功后跳转到某个博客的详情页面，成功后获取到res就是后端传来的数据，这个数据里面的data的id里面包括了是博客的id。
+        })
+      }
+    }
+  }
+```
+* 在在Edit目录的template.vue里面，相对于create创建页面，就是把创建改成了编辑。事件onCreate改成了onEdit。
+```html
+<template>
+  <div id="edit">
+    <h1>编辑文章</h1>
+    <h3>文章标题</h3>
+    <el-input v-model="title"></el-input>
+    <p class="msg">限30个字</p>
+    <h3>内容简介</h3>
+    <el-input type="textarea" v-model="description"  :autosize="{ minRows: 2, maxRows: 6}"></el-input>
+    <p class="msg">限30个字</p>
+    <h3>文章内容</h3>
+    <el-input type="textarea" v-model="content" :autosize="{ minRows: 4, maxRows: 30}"></el-input>
+    <p class="msg">限30个字</p>
+    <p>
+        <label>是否展示到首页</label>
+        <el-switch v-model="atIndex" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+    </p>
+    <el-button @click="onEdit">确定</el-button>
+  </div>
+</template>
+
+<script src="./template.js"></script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style src="./template.css"></style>
+```
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
