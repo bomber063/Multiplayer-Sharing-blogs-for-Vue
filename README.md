@@ -3717,7 +3717,7 @@ assetsPublicPath: './',//这里把绝对路径'/'修改为当前路径'./'
     }
   }
 ```
-* **最后记得把console.log删除掉，有很多**
+* **最后删除或注释掉多余的console.log和部分注释**
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
 * [vue,打包完以后出现的问题，element的icon图标找不到，文件，图片路径问题等](https://blog.csdn.net/qq_41619796/article/details/91806545)
