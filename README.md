@@ -3533,6 +3533,9 @@ const getters={//类似于组件里面的computed属性
 * **上面的三个方法我全都做了**
 ### 完善edit编辑页面
 * 和create页面信息很像，但是——当点击编辑后进入到编辑页面，应该已经获取到标题，内容，描述等信息，**而不是和create创建的路由一样是空的信息**。所以需要先获取到博客信息，然后把博客里面响应的信息赋值给对应的数据。
+* 步骤
+  * 先通过blog.getDetail({ blogId:this.blogId })获取博客数据
+  * 在修改后，点击确认的时候执行函数onEdit()，这里面有`blog.updateBlog({ blogId:this.blogId },{ title:this.title, content:this.content, description:this.description, atIndex:this.atIndex })`
 * v-model里面对应的信息和data里面的数据是相对应的。
 * 具体代码,在Edit目录的template.js里面
 ```js
@@ -3599,5 +3602,133 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style src="./template.css"></style>
 ```
+### 打包编译最后的代码发布到git hub
+* 运行
+```sh
+npm run build
+```
+* 然后出现下面信息
+```sh
+$ npm run build
+
+> blog-client@1.0.0 build D:\jirengu\github收集\Multiplayer Sharing blogs for Vue\blog-client
+> node build/build.js
+
+Hash: 2cb029c272376b04e1a5
+Version: webpack 3.12.0
+Time: 21269ms
+                                                  Asset       Size  Chunks                   Chunk Names
+    static/css/app.bf72b79b845eb7fcfd5872eec0815b03.css     238 kB      10  [emitted]        app
+                static/fonts/element-icons.535877f.woff    28.2 kB          [emitted]    
+                    static/js/0.cf001390a7a5d28ba7f9.js    1.51 kB       0  [emitted]        vendor-async
+                    static/js/1.0f6389e495e01011ff55.js    32.9 kB       1  [emitted]    
+                    static/js/2.642fca50938a22559c21.js    2.09 kB       2  [emitted]    
+                    static/js/3.282944622f92996735d1.js    1.63 kB       3  [emitted]    
+                    static/js/4.216e8b9eface79c002ac.js    1.95 kB       4  [emitted]    
+                    static/js/5.32a72f10ce50b9b2aa68.js    1.55 kB       5  [emitted]    
+                    static/js/6.84c11698c039c22a9815.js    1.82 kB       6  [emitted]    
+                    static/js/7.9441b503b54fe1b5aedc.js    1.61 kB       7  [emitted]    
+                    static/js/8.681c11bb0ea318a1ecf3.js    2.88 kB       8  [emitted]    
+               static/js/vendor.d1129eeec91c050532f8.js     866 kB       9  [emitted]  [big]  vendor
+                  static/js/app.2a6f045f975752670ef7.js    7.15 kB      10  [emitted]        app
+             static/js/manifest.fa3c93be66024dc53f4f.js    1.66 kB      11  [emitted]        manifest
+                 static/fonts/element-icons.732389d.ttf      56 kB          [emitted]    
+static/css/app.bf72b79b845eb7fcfd5872eec0815b03.css.map     342 kB          [emitted]    
+                static/js/0.cf001390a7a5d28ba7f9.js.map    4.52 kB       0  [emitted]        vendor-async
+                static/js/1.0f6389e495e01011ff55.js.map     113 kB       1  [emitted]    
+                static/js/2.642fca50938a22559c21.js.map    8.37 kB       2  [emitted]    
+                static/js/3.282944622f92996735d1.js.map    9.65 kB       3  [emitted]    
+                static/js/4.216e8b9eface79c002ac.js.map    8.81 kB       4  [emitted]    
+                static/js/5.32a72f10ce50b9b2aa68.js.map    6.04 kB       5  [emitted]    
+                static/js/6.84c11698c039c22a9815.js.map    7.29 kB       6  [emitted]    
+                static/js/7.9441b503b54fe1b5aedc.js.map    6.76 kB       7  [emitted]    
+                static/js/8.681c11bb0ea318a1ecf3.js.map    12.7 kB       8  [emitted]    
+           static/js/vendor.d1129eeec91c050532f8.js.map    3.45 MB       9  [emitted]        vendor
+              static/js/app.2a6f045f975752670ef7.js.map    39.7 kB      10  [emitted]        app
+         static/js/manifest.fa3c93be66024dc53f4f.js.map    8.14 kB      11  [emitted]        manifest
+                                             index.html  513 bytes          [emitted]    
+
+  Build complete.
+
+  Tip: built files are meant to be served over an HTTP server.
+  Opening index.html over file:// won't work.
+
+```
+* 然后dist目录下面就更新了新的文件信息。
+#### 工程化上传（window下面不能多命令操作，我的电脑测试了很多次）
+* 我们可以在爬虫看package.json里面增加下面代码
+```js
+  "scripts": {
+    "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
+    "start": "npm run dev",
+    "build": "node build/build.js",
+    "upload": "npm run build; cd dist; git init; git add .;git commit -am \"init\"; git remote add origin git@github.com:bomber063/Multiplayer-Sharing-blogs-for-Vue-dist-build.git; git push -f origin master;"
+    // 1.npm run build打包。
+    // 2.然后切换到dist目录.
+    // 3. 因为如果执行npm run build会把dist目录下面的信息清空，那么git 项目会被删除，所以这里要初始化git init，
+    // 4. 然后提交全部git add .到本地暂存区
+    // 5. git commit -am \"init\",因为外面是引号，所以对引号进行转义。
+    // 6. 推送来远程git remote add origin git@github.com:bomber063/Multiplayer-Sharing-blogs-for-Vue-dist-build.git
+    // 7. git push -f origin master，这里用到-f，因为这里不是源码，是经过编译后的，产生覆盖也是应该的。但是源码上传就不要随便用-f
+  },
+```
+* 这里用到了`git commit -am`,[git commit -m 与 git commit -am 的区别](https://www.cnblogs.com/caixiaoyou/p/9754874.html)
+  * ![](https://img2018.cnblogs.com/blog/1379594/201810/1379594-20181008155314439-1925293344.png)
+* 如果上传到git上面，因为路径是由仓库名字这个目录的，那么我们需要
+```sh
+https://bomber063.github.io/static/css/app.bf72b79b845eb7fcfd5872eec0815b03.css
+```
+* 比如我的仓库名字是**Multiplayer-Sharing-blogs-for-Vue-dist-build**。正确的git hub上面的部署应该是要上仓库名字**Multiplayer-Sharing-blogs-for-Vue-dist-build**
+```
+https://bomber063.github.io/Multiplayer-Sharing-blogs-for-Vue-dist-build/static/css/app.bf72b79b845eb7fcfd5872eec0815b03.css
+```
+* 我们通过查看dist目录下面的index.html文件里面的路径全都是**绝对路径**。可是部署到github上面就需要设置为**相对路径,也就是当前路径**了。
+* 在config目录的index.js里面，通过修改    
+```js
+assetsPublicPath: './',//这里把绝对路径'/'修改为当前路径'./'
+```
+* 还需要把服务器的协议由http修改为https，因为github只允许https协议的服务器。
+* 最后我有发现elementUi的icon图标却不能正常加载出来。.woff文件的请求都失败了。
+经过查询[解决方案——element-ui icon 图标无法正常显示问题](https://blog.csdn.net/weixin_43778272/article/details/100091826)
+```js
+  function generateLoaders (loader, loaderOptions) {
+    const loaders = options.usePostCSS ? [cssLoader, postcssLoader] : [cssLoader]
+
+    if (loader) {
+      loaders.push({
+        loader: loader + '-loader',
+        options: Object.assign({}, loaderOptions, {
+          sourceMap: options.sourceMap
+        })
+      })
+    }
+
+    // Extract CSS when that option is specified
+    // (which is the case during production build)
+    if (options.extract) {
+      return ExtractTextPlugin.extract({
+        use: loaders,
+        fallback: 'vue-style-loader',
+        // 解决icon路径加载错误
+        publicPath:'../../'
+      })
+    } else {
+      return ['vue-style-loader'].concat(loaders)
+    }
+  }
+```
+* **最后记得把console.log删除掉，有很多**
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
+* [vue,打包完以后出现的问题，element的icon图标找不到，文件，图片路径问题等](https://blog.csdn.net/qq_41619796/article/details/91806545)
+* [Windows下如何一次运行多个命令](https://blog.csdn.net/skykingf/article/details/11992351)，不过我觉得这个方式在windows 10系统感觉不太行。
+* [fatal: remote origin already exists.解决方法](https://www.jianshu.com/p/3380ec281729)
+* [npm报错 This is probably not a problem with npm,there is likely additional logging output above可能的原因](https://www.cnblogs.com/muxi0407/p/11833317.html)
+* [Git master branch has no upstream branch的解决](https://blog.csdn.net/benben_2015/article/details/78803753)
+* [git ------ fatal: No configured push destination. Either specify the URL from the command-line or co](https://blog.csdn.net/COCOLI_BK/article/details/97921497)
+* [git commit -m VS git commit -am](https://www.cnblogs.com/yan89/p/11584937.html)
+* [git commit -m vs. git commit -am](https://stackoverflow.com/questions/19877818/git-commit-m-vs-git-commit-am)
+* [配置package.json 使一次npm run start 执行两个指令或者多个指令](https://blog.csdn.net/div_ma/article/details/80579227)
+* [fatal: remote origin already exists - GitHub](https://stackoverflow.com/questions/20564462/fatal-remote-origin-already-exists-github)
+* [git commit -am](https://explainshell.com/explain?cmd=git+commit+-am)
+* [npm run 同时执行多个命令](https://www.cnblogs.com/kdcg/p/11715083.html)
