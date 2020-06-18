@@ -1,18 +1,4 @@
 <template>
-  <!-- <header v-if="true">
-      <h1>Let's share</h1>
-      <p>精品博客汇聚</p>
-      <div class="btns">
-        <el-button>立即登录</el-button>
-        <el-button>注册账号</el-button>
-      </div>
-  </header>
-    <header v-else-if="false">
-      两个根元素header必须要用v-if,v-else-if不然会报错
-      <h1>Let's share</h1>
-      <i class="edit el-icon-edit"></i>
-      <img class="avatar" src="http://cn.gravatar.com/avatar/1?s=128&d=identicon" alt="">
-  </header>-->
 <!-- 如果不用两个根元素，用两个template就可以使用两个v-if -->
   <header :class="{login: isLogin, 'no-login': !isLogin}"> 
     <template v-if="!isLogin">
@@ -49,45 +35,13 @@
           }
       },
       computed:{
-          ...mapGetters([
-          'isLogin',
-          'user'
-          ])
-          // isLogin(){
-          //   // return this.$store.state.auth.isLogin
-          //   return this.$store.getters.isLogin
-          // },
-          // user(){
-          //   return this.$store.getters.user
-          //   // return this.$store.state.auth.user
-          // }
-      // },
-            // computed:{...mapState({
-          // isLogin: function(){return this.$store.state.auth.isLogin},
-          // user: function(){return this.$store.state.auth.user}
-          // isLogin:(state)=>state.auth.isLogin,//箭头函数里面没有this
-          // user: (state)=>state.auth.user//箭头函数里面没有this
-              // 传字符串参数 'count' 等同于 `state => state.count`,因为这里用到了模块auth，所以这种方法就不行了，如果没有用到模块这种方法是可以行的
-          // isLogin: 'isLogin',
-          // user: 'user'
-            // })
-          // },
-          // computed:{
-          //  ...mapGetters({//这里只能接受字符串
-          //       isLogin:'isLogin',
-          //       user:'user'
-          //  }) 
+            ...mapGetters([
+            'isLogin',
+            'user'
+            ])
           },
       created(){//组件生命周期created的时候就开始判断，也就是该组件创建的时候，数据已经OK，但是模板还没有渲染。在这里可以发送AJAX请求
-          this.checkLogin().then(function(res){console.log('返回的结果',res)})
-          // console.log('header组件',this.$store.getters.isLogin)
-          // console.log('header组件',this.$store.state.auth.isLogin)
-          // console.log('header组件',this.isLogin)
-          // setTimeout(()=>{
-          // console.log('header组件',this.$store.getters.isLogin)
-          // console.log('header组件',this.$store.state.auth.isLogin)
-          // console.log('header组件',this.isLogin)
-          // },1000)
+          this.checkLogin()
       },
       methods:{
         ...mapActions([//这样写了之后那么checkLogin就变成了当前组件的方法，就可以使用这个checkLogin方法了

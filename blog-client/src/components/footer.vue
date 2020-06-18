@@ -1,6 +1,6 @@
 <template>
   <footer>
-    <p>© xiedaimala.com 2018 wechat: xiedaimala01</p>
+    <p>Copyright © 2020 Tang Yihong</p>
   </footer>
 </template>
 

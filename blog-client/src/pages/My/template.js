@@ -19,9 +19,7 @@ export default {
         ])
       },
       created(){
-        // console.log(this.$route.params.userId)
         // this.page=this.$route.query.page||1
-        // console.log(typeof this.$route.query.page,123123123)
         this.page=parseInt(this.$route.query.page)||1//因为老师的代码是把page当做currentPage使用的，currentPage是不能是字符串。而我的代码是单独有使用currentPage这个变量,因为这里获取到的是字符串，要通过parseInt转换为数字
         // blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
         blog.getBlogsByUserId(this.user.id,{page:this.page})
@@ -33,7 +31,6 @@ export default {
           // if( res.data.length>0){//先判断返回的数据里面存在data
           //   this.user=res.data[0].user//因为data里面的用户user信息是一样的，所以随便获取一个即可，这里取第一个[0]
           // }
-            console.log(res)
         })
       },
       methods:{
@@ -106,8 +103,6 @@ export default {
             // this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
             // this.params=this.$route.params
             // this.$route.query=this.$route.params
-            // console.log(this.$route.params.a,123123123123)
-            // console.log(2)
           })
         }
       }

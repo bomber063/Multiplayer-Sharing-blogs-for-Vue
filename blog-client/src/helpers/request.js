@@ -19,7 +19,7 @@ export default function request(url, type = 'GET', data = {}) {
         option.data = data//如果不是get请求，第三个参数就是请求主题被发送的数据。
       }
       axios(option).then(res => {
-        console.log(res.data)
+        // console.log(res.data,11111)
         if(res.data.status === 'ok') {//这里的OK是跟后端的约定，后端返回数据里面成功的会有个status:OK 
           resolve(res.data)//就可以得到数据data,并且resolve出去可以给别人.then使用
         }else{//这里的错误是跟后端约定的错误

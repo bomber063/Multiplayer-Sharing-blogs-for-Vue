@@ -11,7 +11,6 @@ export default {
       }
     },
       created(){
-        // console.log(this.$route.params.userId)
         this.page=this.$route.query.page||1
         blog.getBlogsByUserId(this.$route.params.userId,{page:this.page})
         .then((res)=>{
@@ -22,7 +21,6 @@ export default {
           if( res.data.length>0){//先判断返回的数据里面存在data
             this.user=res.data[0].user//因为data里面的用户user信息是一样的，所以随便获取一个即可，这里取第一个[0]
           }
-            console.log(res)
         })
       },
       methods:{
@@ -52,8 +50,6 @@ export default {
             // this.$router.push({ name: 'index', params: { a }}) // -> /index/分页的页码数
             // this.params=this.$route.params
             // this.$route.query=this.$route.params
-            // console.log(this.$route.params.a,123123123123)
-            // console.log(2)
           })
         }
       }

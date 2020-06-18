@@ -13,10 +13,6 @@
         </div>
         <h3>{{blog.title}}</h3>
         <p>{{blog.description}}</p>
-        <!-- <div class="actions">
-          <router-link to="/edit">编辑</router-link>
-          <a href="#">删除</a>
-        </div> -->
       </router-link>
     </section>
     <section class="pagination">
@@ -27,5 +23,4 @@
 
 <script src="./template.js"></script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="less" src="../My/template.less"></style>
