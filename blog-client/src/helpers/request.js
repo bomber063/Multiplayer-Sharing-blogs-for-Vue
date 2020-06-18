@@ -3,7 +3,7 @@ import { Message } from 'element-ui'//这里再次引入一次element是因为�
 
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'//这个是配置请求头里面的post请求默认的content-type是application/x-www-form-urlencoded
 // `headers` 是即将被发送的自定义请求头
-axios.defaults.baseURL = 'http://blog-server.hunger-valley.com'//这里的配置是请求默认的URL是http://blog-server.hunger-valley.com
+axios.defaults.baseURL = 'https://blog-server.hunger-valley.com'//这里的配置是请求默认的URL是http://blog-server.hunger-valley.com
 axios.defaults.withCredentials = true// `withCredentials` 表示跨域请求时是否需要使用凭证
 
 export default function request(url, type = 'GET', data = {}) {
