@@ -3737,6 +3737,10 @@ SameSite by default cookies
 Cookies without SameSite must be secure
 两个选项都选择Disable
 然后重启浏览器
+* [关于浏览器菜单列显示不了的问题 `SameSite=None` and `Secure`](https://blog.csdn.net/u014636209/article/details/105198731)
+* [Chrome 80之后 iframe不支持发送第三方cookie的问题](https://segmentfault.com/a/1190000023461430?utm_source=tag-newest)
+* [调用腾讯地图如何添加 Cookie 的 SameSite 属性（Chrome 版本 78.0.3904.70）](https://cloud.tencent.com/developer/article/1528816)
+* [SameSite Cookie解释](https://web.dev/samesite-cookies-explained/)
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
 * [vue,打包完以后出现的问题，element的icon图标找不到，文件，图片路径问题等](https://blog.csdn.net/qq_41619796/article/details/91806545)
