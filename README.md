@@ -3718,6 +3718,25 @@ assetsPublicPath: './',//这里把绝对路径'/'修改为当前路径'./'
   }
 ```
 * **最后删除或注释掉多余的console.log和部分注释**
+## 新版本的Chrome升级出现的BUG
+* 新版本Chrome 84.0.4147105（正式版本）（64位）**登陆后刷新出现需要再次登陆的情况,并且后端返回的isLogin由true变成false**。其他浏览器firxfox和edge没有影响
+* 控制台警告信息如下
+```
+Issues detected.The new Issues tab displays information about deprecations breaking changes and other potential problems.
+
+/vue-blog-preview/#/:1 A cookie associated with a resource at http://blog-server.hunger-valley.com/ was set with `SameSite=None` but without `Secure`. It has been blocked, as Chrome now only delivers cookies marked `SameSite=None` if they are also marked `Secure`. You can review cookies in developer tools under Application>Storage>Cookies and see more details at https://www.chromestatus.com/feature/5633521622188032.
+```
+* 解决办法：
+  1. 方法一：修改后台
+需要设置响应头时带上这个属性，根据要求写出属性值，不写secure是无效的，并且需要是https
+Set-Cookie: widget_session=abc123; SameSite=None; Secure
+  2. 方法二：修改chrome浏览器的设置
+chrome://flags/
+关闭这两个功能
+SameSite by default cookies
+Cookies without SameSite must be secure
+两个选项都选择Disable
+然后重启浏览器
 ### 其他
 * [KEYCODE列表](https://blog.csdn.net/lf12345678910/article/details/90407644)
 * [vue,打包完以后出现的问题，element的icon图标找不到，文件，图片路径问题等](https://blog.csdn.net/qq_41619796/article/details/91806545)
