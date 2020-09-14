@@ -17,6 +17,7 @@ export default {//这里结合了/helpers/request里面的request请求有三个
   },
 
   logout() {
+    localStorage.removeItem('token');//登出的时候移除token
     return request(URL.LOGOUT)
   },
 
